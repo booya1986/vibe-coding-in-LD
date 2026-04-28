@@ -19,3 +19,7 @@ GMT20260428-071117_Recording.m4a
 # Original HEIC files (we use the converted JPGs)
 *.heic
 *.HEIC
+
+# Python
+__pycache__/
+*.pyc
