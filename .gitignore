@@ -1,0 +1,21 @@
+# Private rehearsal audio (internal team recording, not for share)
+GMT20260428-071117_Recording.m4a
+*.m4a
+*.wav
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Transcript output (private)
+/tmp/
+
+# Tooling artifacts
+.claude/
+.pdf-export/
+.playwright-mcp/
+
+# Original HEIC files (we use the converted JPGs)
+*.heic
+*.HEIC

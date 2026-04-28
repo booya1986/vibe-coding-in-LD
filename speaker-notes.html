@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0c0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>הערות דובר, Vibe Coding in L&D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0c;
+    --bg-2: #161616;
+    --bg-3: #1c1c1c;
+    --accent: #FF2020;
+    --accent-light: #FF6060;
+    --accent-glow: rgba(255,32,32,0.45);
+    --accent-glow2: rgba(255,32,32,0.18);
+    --text-1: #ffffff;
+    --text-2: #d4d4d4;
+    --text-3: #8a8a8a;
+    --text-4: #5e5e5e;
+    --border: rgba(255,255,255,0.08);
+    --border-h: rgba(255,32,32,0.4);
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #ef4444;
+    --safe-bot: env(safe-area-inset-bottom, 0);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-2);
+    font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    direction: rtl;
+    text-align: right;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse at top, rgba(255,32,32,0.05), transparent 60%),
+      linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: auto, 60px 60px, 60px 60px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Top progress bar */
+  .progress {
+    position: fixed;
+    top: 0; right: 0; left: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    z-index: 50;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-light), var(--accent));
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.25s ease;
+  }
+
+  /* Slide pager (each slide = full viewport, scroll-snap) */
+  .deck {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .slide {
+    min-height: 100vh;
+    min-height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    padding: 18px 16px calc(72px + var(--safe-bot)) 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Slide header */
+  .slide-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 6px;
+  }
+  .slide-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--accent-light);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .slide-tag::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .slide-num {
+    font-size: 0.75rem;
+    color: var(--text-4);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .slide-title {
+    margin: 0;
+    color: var(--text-1);
+    font-size: clamp(1.15rem, 4.5vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+  .accent-line {
+    width: 36px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin: -4px 0 0;
+  }
+  .duration-pill {
+    align-self: flex-start;
+    background: rgba(255,32,32,0.1);
+    border: 1px solid rgba(255,32,32,0.25);
+    color: var(--accent-light);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  /* Thumbnail */
+  .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  .thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Sections */
+  .section {
+    padding: 11px 14px;
+    background: rgba(255,255,255,0.025);
+    border-right: 2px solid var(--accent-glow2);
+    border-radius: 4px 8px 8px 4px;
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+  .section h3 {
+    margin: 0 0 6px;
+    font-size: 0.66rem;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section p { margin: 4px 0; }
+  .section ul, .section ol {
+    margin: 4px 0;
+    padding-right: 20px;
+  }
+  .section li { margin: 3px 0; }
+  .section strong { color: var(--text-1); font-weight: 700; }
+  .section em { color: var(--accent-light); font-style: normal; font-weight: 600; }
+  .section.script {
+    border-right-color: var(--accent);
+    background: rgba(255,32,32,0.06);
+    font-size: 1rem;
+    line-height: 1.85;
+    padding: 14px 16px;
+  }
+  .section.script h3 { color: var(--accent); }
+  .section.script p { color: var(--text-1); }
+  .section.tip { border-right-color: var(--good); background: rgba(74,222,128,0.05); }
+  .section.tip h3 { color: var(--good); }
+  .section.warn { border-right-color: var(--warn); background: rgba(251,191,36,0.05); }
+  .section.warn h3 { color: var(--warn); }
+  .section.bad  { border-right-color: var(--bad); background: rgba(239,68,68,0.05); }
+  .section.bad  h3 { color: var(--bad); }
+  .section .quote {
+    border-right: 3px solid var(--accent);
+    padding: 8px 14px;
+    margin: 8px 0;
+    color: var(--text-1);
+    font-style: italic;
+    background: rgba(255,32,32,0.08);
+    border-radius: 0 6px 6px 0;
+    line-height: 1.7;
+  }
+
+  /* Bottom navigation */
+  .nav {
+    position: fixed;
+    bottom: 0; right: 0; left: 0;
+    height: calc(60px + var(--safe-bot));
+    padding: 0 12px var(--safe-bot);
+    background: rgba(12,12,12,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 40;
+  }
+  .nav-btn {
+    flex: 0 0 60px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-h);
+    color: var(--accent-light);
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover, .nav-btn:active {
+    background: var(--accent);
+    color: var(--text-1);
+  }
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .nav-info {
+    flex: 1;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 0.78rem;
+    line-height: 1.3;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .nav-info .now {
+    color: var(--text-1);
+    font-weight: 700;
+    display: block;
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .nav-info .meta {
+    font-size: 0.7rem;
+    color: var(--text-4);
+  }
+
+  /* TOC drawer */
+  .toc-toggle {
+    flex: 0 0 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toc-toggle svg { width: 22px; height: 22px; }
+  .toc {
+    position: fixed;
+    top: 0; bottom: 0; left: -100%;
+    width: 86%;
+    max-width: 360px;
+    background: var(--bg-2);
+    border-left: 1px solid var(--border-h);
+    padding: 24px 18px calc(24px + var(--safe-bot));
+    overflow-y: auto;
+    transition: left 0.28s ease;
+    z-index: 60;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  }
+  .toc.open { left: 0; }
+  .toc-back {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 55;
+  }
+  .toc-back.open { opacity: 1; pointer-events: auto; }
+  .toc h2 {
+    margin: 0 0 4px;
+    color: var(--text-1);
+    font-size: 1rem;
+    font-weight: 800;
+  }
+  .toc-sub {
+    color: var(--text-4);
+    font-size: 0.75rem;
+    margin: 0 0 16px;
+  }
+  .toc ol {
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+  .toc li {
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toc a {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 9px 4px;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+  .toc a:hover { color: var(--accent-light); }
+  .toc a.active { color: var(--accent-light); font-weight: 700; }
+  .toc a .num {
+    color: var(--text-4);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    min-width: 24px;
+    flex-shrink: 0;
+  }
+  .toc a.active .num { color: var(--accent); }
+
+  /* Final card variant */
+  .slide.final {
+    background: linear-gradient(180deg, transparent, rgba(255,32,32,0.06));
+  }
+  .final-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Hint chip */
+  .swipe-hint {
+    position: fixed;
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+    background: rgba(0,0,0,0.85);
+    color: var(--text-1);
+    padding: 14px 22px;
+    border-radius: 100px;
+    border: 1px solid var(--accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .swipe-hint.show { opacity: 1; }
+
+  /* Larger screens, two-column */
+  @media (min-width: 820px) {
+    .slide {
+      padding: 32px 36px calc(80px + var(--safe-bot));
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      grid-template-rows: auto auto auto 1fr;
+      gap: 16px 32px;
+      align-items: start;
+    }
+    .slide-head { grid-column: 1 / -1; }
+    .slide-title { grid-column: 1 / -1; font-size: clamp(1.4rem, 2.2vw, 2rem); }
+    .accent-line { grid-column: 1 / -1; }
+    .thumb {
+      grid-column: 1 / 2;
+      grid-row: 5 / 6;
+      align-self: start;
+      max-width: 100%;
+    }
+    .slide-body {
+      grid-column: 2 / 3;
+      grid-row: 5 / 6;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .slide:not(.final) > .duration-pill { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 819px) {
+    .slide-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+
+  /* Print, one slide per page */
+  @media print {
+    body { background: white; color: #111; }
+    .progress, .nav, .toc, .toc-back, .swipe-hint { display: none !important; }
+    .deck { height: auto; overflow: visible; scroll-snap-type: none; }
+    .slide {
+      page-break-after: always;
+      break-after: page;
+      min-height: auto;
+      background: white !important;
+      color: #111;
+    }
+    .slide-title, .section strong { color: #111 !important; }
+    .section { background: #f6f6f6 !important; color: #222; border-right-color: #c00 !important; }
+    .section h3 { color: #c00 !important; }
+    .section.script { background: #fff5f5 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+
+<div class="toc-back" id="toc-back"></div>
+<aside class="toc" id="toc">
+  <h2>הערות דובר</h2>
+  <p class="toc-sub">מהפכת המהפכה האג'נטית בפיתוח למידה, 26 שקפים, ~25 דקות</p>
+  <ol id="toc-list"></ol>
+</aside>
+
+<main class="deck" id="deck">
+
+<!-- ============== S01 ============== -->
+<section class="slide" id="s01" data-num="1" data-title="פתיחה">
+  <div class="slide-head">
+    <span class="slide-tag">פתיחה</span>
+    <span class="slide-num">01 / 26</span>
+  </div>
+  <h1 class="slide-title">מהפכת המהפכה האג'נטית בפיתוח למידה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~30 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-01.png" alt="שקף 1, פתיחה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, אמירת פתיחה</h3>
+      <p>"ערב טוב, אני אבי לוי, מנהל צוות פיתוח למידה בקמפוס פועלים."</p>
+      <p>"היום אני אספר לכם איך הצוות שלנו עבר מ‑GPT, דרך כל סוגי הפרומפטים, אל עולם אג'נטי, ואיך הכלים האלה אפשרו לנו לבנות מערכת שלמה לניתוח פערי ידע, <strong>בלי לדעת לכתוב שורת קוד אחת</strong>."</p>
+      <p>"זו לא הרצאה תיאורטית. זה פרויקט שעשינו ב-3 שבועות, ואני בא לחלוק את האמת, מה עבד, מה לא, ולמה זה משנה לכל מי שעוסק בלמידה."</p>
+    </div>
+    <div class="section tip">
+      <h3>טון ומקצב</h3>
+      <p>הישיר מבט, חייך, המתן 2 שניות, ואז התחל. הרקע עם החלקיקים הוא רגע לנשום, לא להאיץ.</p>
+    </div>
+    <div class="section bad">
+      <h3>אל תפתח ב</h3>
+      <p>"שלום, היום נדבר על..." משעמם. אם הקהל קר, פתח בשאלה רטורית: <em>"מי כאן בנה השנה משהו עם AI שלא ידע לבנות לפני שנה?"</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S02 ============== -->
+<section class="slide" id="s02" data-num="2" data-title="וידאו פתיחה">
+  <div class="slide-head">
+    <span class="slide-tag">וידאו פתיחה</span>
+    <span class="slide-num">02 / 26</span>
+  </div>
+  <h1 class="slide-title">ai.mp4</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">משך הסרטון, 18 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-02.png" alt="שקף 2, וידאו"></div>
+  <div class="slide-body">
+    <div class="section warn">
+      <h3>חוקי הברזל</h3>
+      <p><strong>שתיקה מוחלטת</strong> כשהסרטון רץ. אל תדבר מעליו. בסוף, פאוזה של שנייה לפני שאתה עובר הלאה.</p>
+    </div>
+    <div class="section script">
+      <h3>קריינות, גשר לשקף הבא</h3>
+      <p>"כשראיתי את הסרטון הזה לראשונה, חשבתי לעצמי, 'רגע, זה מה שכל גורו AI אומר לנו עכשיו'?"</p>
+      <p>"היום, אני <em>לא</em> הולך להיות אחד מהם."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S03 ============== -->
+<section class="slide" id="s03" data-num="3" data-title="אנטי-גורו">
+  <div class="slide-head">
+    <span class="slide-tag">אנטי-גורו</span>
+    <span class="slide-num">03 / 26</span>
+  </div>
+  <h1 class="slide-title">"גם לכם נמאס מכל הגורויים?"</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~20 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-03.png" alt="שקף 3, אנטי-גורו"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, חצי ציני</h3>
+      <p>"כולנו ראינו את הסרטונים האלה: '5 פרומפטים שישנו את חייך', 'AI יחליף אותך עד 2026', 'הוא כתב לי אפליקציה שלמה ב-3 דקות'."</p>
+      <p>"אז היום זה <em>לא</em> הולך להיות ככה."</p>
+      <p>"אני לא גורו, אני מנהל צוות שניסה משהו שעבד, ובא לחלוק עבודה אמיתית, שדרשה חשיבה, חקירה, ולא מעט נסיונות שנכשלו."</p>
+    </div>
+    <div class="section tip">
+      <h3>החוזה שלי עם הקהל</h3>
+      <p>המשפט "אני לא גורו, אני מקצוען עם פרויקט אמיתי" הוא <strong>חוזה עם הקהל</strong>, וכל יתר המצגת מסתמכת עליו. שמור על הטון הזה לאורך כל ההרצאה.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S04 ============== -->
+<section class="slide" id="s04" data-num="4" data-title="מי אנחנו">
+  <div class="slide-head">
+    <span class="slide-tag">מי אנחנו</span>
+    <span class="slide-num">04 / 26</span>
+  </div>
+  <h1 class="slide-title">הצוות + Super Group</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~30 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-04.png" alt="שקף 4, צוות"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הצגה</h3>
+      <p>"מאחורי הפרויקט הזה עומדים שלושה אנשים, ואני רוצה להציג אותם בקצרה:"</p>
+      <ul>
+        <li><strong>איילת כהן ברזניצקי</strong>, מנהלת היחידה שלנו. היא זו שראתה את הצורך לפני כולם, וגייסה את החטיבה הקמעונאית למהלך.</li>
+        <li><strong>מירב טלר ושדי</strong>, מומחית הטכנולוגיה והמערכות שלנו. ה-LMS, האינטגרציות, התשתית, הכל עליה.</li>
+        <li>"ואני, אבי לוי, הובלתי את הצד של ה-AI ופיתוח המנוע."</li>
+      </ul>
+      <p>"אנחנו חלק מ-<em>Super Group</em>, קבוצת-על של 7 אנשי מקצוע בקמפוס פועלים, שכל אחד תרם, מי בקריאייטיב, מי בפדגוגיה, מי באקדמיה. הקרדיט המלא בסוף."</p>
+    </div>
+    <div class="section bad">
+      <h3>להימנע</h3>
+      <p>אל תקריא רשימת תפקידים. חבר כל אדם לאמירה אישית קצרה. הקהל לא זוכר תפקידים, הוא זוכר אנשים.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S05 ============== -->
+<section class="slide" id="s05" data-num="5" data-title="HBR, 91/38">
+  <div class="slide-head">
+    <span class="slide-tag">ציטוט HBR</span>
+    <span class="slide-num">05 / 26</span>
+  </div>
+  <h1 class="slide-title">91% מאמינים, רק 38% מוכנים</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-05.png" alt="שקף 5, HBR"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"קצת מספרים, כי חייבים."</p>
+      <p>"הרווארד ביזנס ריוויו, ינואר 2026: <strong>91 אחוז</strong> ממנהלי העסקים מאמינים שטרנספורמציה אג'נטית היא העתיד של עולם העבודה. אבל רק <strong>38 אחוז</strong> מרגישים שהארגון שלהם מוכן לזה."</p>
+      <p>"הפער הזה, של 53 נקודות אחוז, זה הפער שאנחנו, אנשי הלמידה, צריכים לסגור. <em>זה לא תפקידם של מהנדסי הסיסטם, זה התפקיד שלנו.</em>"</p>
+    </div>
+    <div class="section tip">
+      <h3>מקצב</h3>
+      <p>תן לאנימציה לרוץ. כשהמספר מגיע ל-91, הפסק. שתיקה. רק אז המשך.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S06 ============== -->
+<section class="slide" id="s06" data-num="6" data-title="WEF, Tipping Point">
+  <div class="slide-head">
+    <span class="slide-tag">ציטוט WEF</span>
+    <span class="slide-num">06 / 26</span>
+  </div>
+  <h1 class="slide-title">נקודת המפנה, 10-25%</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-06.png" alt="שקף 6, WEF"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"ה-World Economic Forum מצא שנקודת המפנה לאימוץ של רעיון חדש בארגון מתחילה לזרוח <strong>בין 10 ל-25 אחוז</strong> מהמאמצים."</p>
+      <p>"תרגום: <em>לא צריך להמתין שכל 8,500 העובדים בבנק יהיו AI-Ready.</em> צריך מטה קטן של early adopters שמייצרים תוצאות מוחשיות, וזה כבר מספיק כדי להזיז את העגלה."</p>
+      <p>"אנחנו, מחלקת הלמידה בקמפוס פועלים, היינו ה-early adopters האלה. וזה מה שאני הולך להראות לכם."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S07 ============== -->
+<section class="slide" id="s07" data-num="7" data-title="WEF, Proof Over Promise">
+  <div class="slide-head">
+    <span class="slide-tag">ציטוט WEF</span>
+    <span class="slide-num">07 / 26</span>
+  </div>
+  <h1 class="slide-title">45% משתמשים, ביטחון ירד 18%</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-07.png" alt="שקף 7, WEF Proof"></div>
+  <div class="slide-body">
+    <div class="section warn">
+      <h3>הסתירה, להדגיש</h3>
+      <p>"45% עובדים משתמשים ב-AI בעבודה באופן קבוע. ועם זאת, <strong>הביטחון בשימוש ירד ב-18%.</strong>"</p>
+    </div>
+    <div class="section script">
+      <h3>קריינות, האבחנה</h3>
+      <p>"זה לא פרדוקס, זאת אבחנה."</p>
+      <p>"יש הרבה עובדים שמשתמשים ב-AI באופן ספורדי, לא יודעים בעצמם מה הם עושים, ובסוף הם <em>לא בטוחים</em> בשימוש שלהם, ובצדק."</p>
+      <p>"מה שפעם הספיק בכמה פרומפטים בודדים, היום דורש לעשות דברים הרבה יותר מורכבים. צריך ללמוד שיטות, סקילים, אג'נטים, להבין אותם נכון, להזין קונטקסט נכון, ועוד דברים כאלה."</p>
+      <p><strong>השיטה היא הסיפור.</strong> וכשמתחילים לחפש מה גורם לזה, מגיעים לנקודה שדלויט שמה אצבע עליה."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S08 ============== -->
+<section class="slide" id="s08" data-num="8" data-title="Deloitte">
+  <div class="slide-head">
+    <span class="slide-tag">ציטוט Deloitte</span>
+    <span class="slide-num">08 / 26</span>
+  </div>
+  <h1 class="slide-title">Insufficient Worker Skills</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~20 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-08.png" alt="שקף 8, Deloitte"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"החסם הכי גדול לאינטגרציה של AI בארגונים?"</p>
+      <p>"<em>לא טכנולוגיה. לא תקציב. לא רגולציה.</em>"</p>
+      <p>"<strong>חוסר ביכולות של עובדים. Skills.</strong>"</p>
+      <p>"וכאן בדיוק נכנסת הלמידה. וזה הסיפור של היום, איך לקחנו את כל המסקנות של HBR, של WEF, של Deloitte, וכנסנו אותם לתוך תהליך של ניתוח פערי ידע, שאני לא טוען שהוא מושלם, יש בו עוד מקום לשיפור, אבל הוא <em>אמיתי</em>, ואנחנו רצים אותו."</p>
+    </div>
+    <div class="section tip">
+      <h3>רגע מעבר</h3>
+      <p>עצירה קטנה. הרצינות עולה. <em>"אז בואו נצלול."</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S09 ============== -->
+<section class="slide" id="s09" data-num="9" data-title="חוצץ, Use Case">
+  <div class="slide-head">
+    <span class="slide-tag">חוצץ, Use Case</span>
+    <span class="slide-num">09 / 26</span>
+  </div>
+  <h1 class="slide-title">ניתוח פערי ידע בחטיבה קמעונאית</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~20 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-09.png" alt="שקף 9, Use Case"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"מהיום אנחנו עוברים מעולם הסטטיסטיקות והמאמרים, אל מקרה אמיתי שהתרחש בבנק הפועלים בשנת 2026."</p>
+      <p>"מקרה בוחן אחד, חטיבה אחת, <strong>168 סניפים, 1,250 עובדים שהשיבו, 31,771 שורות תשובות</strong>."</p>
+      <p>"<em>פרויקט שלקח לנו ימים, לא חודשים</em>, ובלי לשכור צוות פיתוח חיצוני."</p>
+    </div>
+    <div class="section tip">
+      <h3>טון</h3>
+      <p>הרצינות עולה. זו ההבטחה לקהל: "אני נותן לכם פרויקט אמיתי, לא מצגת מאי שכלית."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S10 ============== -->
+<section class="slide" id="s10" data-num="10" data-title="האתגר, מטריצה">
+  <div class="slide-head">
+    <span class="slide-tag">האתגר</span>
+    <span class="slide-num">10 / 26</span>
+  </div>
+  <h1 class="slide-title">מקצועיות ושירות, מהמאקרו לעובד</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~90 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-10.png" alt="שקף 10, האתגר"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הסיפור</h3>
+      <p>"בנק הפועלים נמצא במקום לא טוב בשירות, וחלק משירות זה מקצועיות. <em>אנחנו אומרים, זה משהו שצריך לתקן.</em>"</p>
+      <p>"הבעיה: ברוב המקרים זה ניזר ברמת מאקרו, סקרי שביעות רצון, פניות ציבור, נתוני הארגון. זה נותן לנו תמונה כללית, אבל לא אומר <strong>מי</strong> סובל מהבעיה ומה הוא צריך."</p>
+      <p>"אנחנו עובדים עם פריסה ארצית של 168 סניפים, ויש שונות גדולה מאוד, אזור השרון לעומת אזור דרום, באילו מוצרים, באילו שירותים מספקים לאוכלוסייה שם."</p>
+      <p>"כשמסתכלים רק על מקרו, מבזבזים זמן של עובדים שכבר יודעים, ומתסכלים אותם בחוויה."</p>
+      <p><strong>הקפיצה: ממדד סובייקטיבי שנתי, למדד אובייקטיבי וגם מתמשך</strong>, מד דופק מקצועי, 5 שאלות פעם בחודש, פר עובד."</p>
+    </div>
+    <div class="section tip">
+      <h3>איך לקרוא את המטריצה</h3>
+      <p>התחל מהפינה האדומה (עובד ✗ + ארגון ✗ = עדיפות ראשונה), והסבר: <em>"אם הפער מצביע גם ברמת הארגון, זה כבר לא רק פער ידע, זה בעיה של תהליך."</em> סיים בירוק (כפול ✓ = שימור והעצמה).</p>
+    </div>
+    <div class="section warn">
+      <h3>אם נשאל "מה הרוחב?"</h3>
+      <p>כל החטיבה הקמעונאית. השלב הראשון, בנקאות אישית.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S11 ============== -->
+<section class="slide" id="s11" data-num="11" data-title="השילוש הקדוש">
+  <div class="slide-head">
+    <span class="slide-tag">שלב 1, גיוס בעלי עניין</span>
+    <span class="slide-num">11 / 26</span>
+  </div>
+  <h1 class="slide-title">השילוש הקדוש</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~60 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-11.png" alt="שקף 11, השילוש הקדוש"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"לפני שורת קוד אחת, הבנו: אם אנחנו רוצים לעשות שינוי, אנחנו צריכים <strong>לגייס את כל מי שרלוונטי</strong>."</p>
+      <p>"השילוש הקדוש: <em>העובד במרכז, המנהל הישיר, והקמפוס שמייצג את הארגון</em>. לכל אחד תפקיד בתהליך הזה."</p>
+      <ul>
+        <li><strong>העובדים</strong>: אחריות אישית, ללמוד, להתנסות, לשאול שאלות.</li>
+        <li><strong>המנהלים</strong>: לאפשר זמן ללמידה, לעצב סביבה תומכת, חיזוק בשטח.</li>
+        <li><strong>הארגון</strong>: לעצב תוכנית, מעקב, מדידה, שיפור מתמיד.</li>
+      </ul>
+      <p>"רק כשעושים את כל הדברים האלה ביחד, זה מצליח."</p>
+    </div>
+    <div class="section tip">
+      <h3>טריק לסיפור (5 שניות)</h3>
+      <p>"ביקשנו את <strong>המנכ"ל של החטיבה</strong> לשלוח את המייל הראשון. <em>לא</em> את מנהלת הלמידה. וזה שינה הכל."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S12 ============== -->
+<section class="slide" id="s12" data-num="12" data-title="מאגר השאלות">
+  <div class="slide-head">
+    <span class="slide-tag">שלב 2, בנייה ותיקוף</span>
+    <span class="slide-num">12 / 26</span>
+  </div>
+  <h1 class="slide-title">מאגר שאלות, מבחן ותיקוף</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~60 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-12.png" alt="שקף 12, מאגר השאלות"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"עבדנו עם המכלקת ועם המדריכים שלנו בקמפוס, ובנינו מאגר שאלות."</p>
+      <p>"הקריטי: <strong>השאלות לא בודקות ידע מושגי, אלא ידע פרוצדורלי.</strong> <em>איך הידע המושגי בא לידי ביטוי בעבודה היומית של הבנקאי.</em>"</p>
+      <p>"ובכנות, גם פה נעזרנו בבינה מלאכותית. במקום שאני אכתוב 50 שאלות לבד, ה-AI כתב 75, ואז עברנו ודייקנו."</p>
+      <p>"תיקפנו את זה, רצנו את זה, גם מול חניכים בקורסים שלנו, וקיבלנו פידבק חשוב: <em>'המבחן באמת קשה, אבל קשה ברמה המעניינת'</em>. זה הבלאנס שאתה מנסה לייצר בכל סוג של שאלה."</p>
+    </div>
+    <div class="section tip">
+      <h3>ציטוט שעבד</h3>
+      <p class="quote">"המבחן לא פשוט, אבל מסקרן." זה היה הרגע שידענו שעבדנו נכון.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S13 ============== -->
+<section class="slide" id="s13" data-num="13" data-title="קמפיין">
+  <div class="slide-head">
+    <span class="slide-tag">שלב 3, תקשורת</span>
+    <span class="slide-num">13 / 26</span>
+  </div>
+  <h1 class="slide-title">קמפיין פנים-ארגוני</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~45 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-13.png" alt="שקף 13, קמפיין"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"אם אני רוצה לבנות תוכניות פיתוח מותאמות אישית, אני צריך כמה שיותר מענה. לא רק מענה סטטיסטי, מענה <em>אמיתי</em>."</p>
+      <p>"החלטה אמיצה: <strong>סגרנו יום ושעה שבה כולם עוצרים את העבודה ועושים את המבדק.</strong> זה לא 'תמצאו זמן', זה 'הזמן כבר ביומן שלכם'."</p>
+      <p>"יצרנו קמפיין פנים-ארגוני שכלל: WhatsApp ידידותי, זימון יומן ישיר ללוח של העובדים, ומייל מבית הנהלת החטיבה."</p>
+      <p>"אגב, גם את המייל לעובדים, <em>הכנסנו ב-AI לשיפור</em>."</p>
+    </div>
+    <div class="section tip">
+      <h3>הפאנץ'</h3>
+      <p><em>"תפסיקו לבקש מעובדים ללמוד. תזמינו אותם."</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S14 ============== -->
+<section class="slide" id="s14" data-num="14" data-title="יום המענה">
+  <div class="slide-head">
+    <span class="slide-tag">שלב 4, יום המענה</span>
+    <span class="slide-num">14 / 26</span>
+  </div>
+  <h1 class="slide-title">יום המענה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~60 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-14.png" alt="שקף 14, יום המענה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"ביום המענה הראשון הגענו ל-<strong>65 אחוז מענה</strong>. שזה לא רע בכלל."</p>
+      <p>"החלטנו לעשות מועד נוסף, וזה הביא אותנו ל-<strong>75 אחוז</strong>."</p>
+      <p>"במספרים: <strong>1,250 בנקאים, 168 סניפים, 31,771 שורות תשובות</strong>. וזה המגניב, יש לנו <em>הרבה דאטה</em>."</p>
+    </div>
+    <div class="section tip">
+      <h3>אנקדוטה לחיבור</h3>
+      <p>"תיכננו מערך תמיכה של 6 אנשים בכוננות, חששנו מקריסה, ובסוף ספרנו <strong>4 קריאות תקלה בלבד</strong>. זה היה הרגע שהבנו ש<em>עיצוב חוויה הוא הכל</em>."</p>
+    </div>
+    <div class="section warn">
+      <h3>על הדשבורד שמופיע</h3>
+      <p>"כן, גם הדשבורד הזה נבנה ב-Claude Code, נגיע לזה."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S15 ============== -->
+<section class="slide" id="s15" data-num="15" data-title="31,771 + 5 עקרונות">
+  <div class="slide-head">
+    <span class="slide-tag">האתגר השני</span>
+    <span class="slide-num">15 / 26</span>
+  </div>
+  <h1 class="slide-title">31,771 תשובות, ובעיה אחת גדולה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~90 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-15.png" alt="שקף 15, 31,771"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, פתיחה</h3>
+      <p>"בדרך כלל, כשעובדים עם מערכות LMS, הדאטה שאתה מקבל זה <em>לא לחיצת כפתור והופ זה הופך לתובנה</em>. זה דורש לא מעט עיבוד."</p>
+      <p>"בעולם הישן, היו לנו שתי אופציות: <strong>או להשקיע המון זמן ואנשים עם מיומנויות ניתוח נתונים גבוהות, או לבקש מספק חיצוני שיעשה את הניתוח עבורנו</strong>."</p>
+      <p>"<em>היום, אנחנו, מחלקת הלמידה, יכולים לעשות את זה בעצמנו.</em>"</p>
+      <p>"ובעצם בנינו תהליך מבוסס על חמישה עקרונות:"</p>
+      <ol>
+        <li>מיפוי פונקציונלי של כל שאלה לפער ספציפי.</li>
+        <li>אלגוריתם תעדוף, <strong>לא כל פער שווה</strong>.</li>
+        <li>סגמנטציה עסקית, אישית מול עסקית, לא לערבב.</li>
+        <li>ייצור דוחות מבוזר, <strong>211 דוחות אישיים</strong>.</li>
+        <li>סגירת מעגל הלמידה, פער ← הדרכה ב-Boost.</li>
+      </ol>
+    </div>
+    <div class="section tip">
+      <h3>הסיפור הקצר</h3>
+      <p>"אקסל גולמי ← AI ← תעדוף ← 211 דוחות אישיים ← הדרכה. <em>כל זה קרה על המחשב הנייד שלי</em>, בלי שרת בענן, בלי להעביר נתונים החוצה."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S16 ============== -->
+<section class="slide" id="s16" data-num="16" data-title="אנליסט ב-100$">
+  <div class="slide-head">
+    <span class="slide-tag">הפסקה תיאטרלית</span>
+    <span class="slide-num">16 / 26</span>
+  </div>
+  <h1 class="slide-title">גייסנו אנליסט ב-100$</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-16.png" alt="שקף 16, 100$"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, חצי בדיחה אבל אמיתי</h3>
+      <p>"בעצם, מה שעשינו, זה ש<strong>גייסנו אנליסט ב-100 דולר</strong>."</p>
+      <p>"כן, מאה דולר. זה מחיר Claude Code Max עם credits, לחודש. ולמשך 3 שבועות, היה לי אנליסט נתונים <em>שעובד 24 שעות ביממה, בלי לבקש קפה ובלי לבקש העלאה</em>."</p>
+    </div>
+    <div class="section tip">
+      <h3>הפאנץ' לזכור</h3>
+      <p>"Claude Code לא <em>החליף</em> אותי. הוא <em>שחרר</em> אותי. הזמן שלי עבר מ-Excel לחשיבה אסטרטגית."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S17 ============== -->
+<section class="slide" id="s17" data-num="17" data-title="מנוע HITL">
+  <div class="slide-head">
+    <span class="slide-tag">ארכיטקטורת הפתרון</span>
+    <span class="slide-num">17 / 26</span>
+  </div>
+  <h1 class="slide-title">מנוע זיהוי הפערים, HITL</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~75 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-17.png" alt="שקף 17, HITL"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"בעבר, היינו צריכים מומחה תוכן שיעבור על כל שאלה ויגיד 'השאלה הזו מצביעה על פער X'. אנחנו <strong>הפכנו את התהליך</strong>."</p>
+      <p>"<em>נתנו למודל ספה לנתח את השאלות ולהציע על מה כל פער מצביע, כדי שהמדריכים רק יקפו ויתקנו.</em>"</p>
+      <p>"זה חסך המון זמן. רמת הדיוק של ה-LLM בניסוח הפערים הייתה <strong>סביב 80 אחוז נכון</strong>. ומה שאני קוראים HITL, Human In The Loop, נכנס פה: <em>המומחה הוא הסמכות, ה-AI הוא המאיץ</em>."</p>
+      <p>"מה שלקח שבועות, הפך לימים. <em>לא בגלל שה-AI חכם יותר מאיתנו, אלא בגלל שהוא מהיר יותר במשימות תרגום.</em>"</p>
+      <p>"כמובן שהפרדנו בין קווי לקוחות, אישית מול עסקית, ובסוף קיבלנו פרופיל פערים אישי ומדויק לכל עובד שהשיב למבחן."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S18 ============== -->
+<section class="slide" id="s18" data-num="18" data-title="Sub Agents">
+  <div class="slide-head">
+    <span class="slide-tag">האסטרטגיה, ניהול צוות</span>
+    <span class="slide-num">18 / 26</span>
+  </div>
+  <h1 class="slide-title">ניהול צוות Sub Agents</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~75 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-18.png" alt="שקף 18, Sub Agents"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"כשהבנו שזה הרבה יותר מסובך מלזרוק פרומפט, או לתת קופסה אלות לנתחו לבד, החלטנו <strong>ללכת על שיטה אחרת. בנינו צוות של תתי-סוכנים</strong>."</p>
+      <p>"זה לא 'אני מבקש מ-Claude לכתוב קוד'. זה 'אני מבקש מ-Claude <em>לארגן צוות</em> שיכתוב קוד'. רמת הפשטה גבוהה יותר, איכות טובה יותר."</p>
+      <ul>
+        <li><strong>Coordinator</strong>, מנהל הפרויקט, איתו אני עובד ישירות, מקבל את המשימה הגדולה ומפרק אותה.</li>
+        <li><strong>Analyst</strong>, נוסחאות תעדוף וחישובי ציונים.</li>
+        <li><strong>Backend Engineer</strong>, חישובים, קריאות API.</li>
+        <li><strong>RTL Specialist</strong>, מומחה לעברית, קריטי לבנק.</li>
+        <li><strong>Data Processor</strong>, מנקה את האקסלים המקוריים.</li>
+        <li><strong>Validator</strong>, בקר איכות, וודא שמידע אישי לא מתערבב בין מחלקות. <em>הוא תפס פעם שהמערכת חשבה שמחלקה היא אישית והיא בעצם עסקית, ועצר אותנו בזמן.</em></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S19 ============== -->
+<section class="slide" id="s19" data-num="19" data-title="Skills">
+  <div class="slide-head">
+    <span class="slide-tag">הקטע החזק במצגת</span>
+    <span class="slide-num">19 / 26</span>
+  </div>
+  <h1 class="slide-title">למה חשוב להשתמש בסקילים?</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~90 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-19.png" alt="שקף 19, Skills"></div>
+  <div class="slide-body">
+    <div class="section warn">
+      <h3>קח כאן זמן</h3>
+      <p>זה הרגע שמבדיל בין "סוף-עוד-שיחת-AI" ל-"מערכת מומחית". <strong>אל תרוץ.</strong></p>
+    </div>
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"פירוק משימה לתתי-סוכנים זה התחלה טובה. אבל זה לא היה מספיק. אנחנו רוצים שהסוכן <em>יודע מה לעשות</em>."</p>
+      <p>"אז הוספנו על גבי הסוכנים <strong>שישה Skills</strong>, אחד לכל סוכן."</p>
+      <p>"מה זה Skill בעצם? <em>סקיל זה בסוף קובץ טקסט.</em> קובץ MD שמגדיר את הגדרת התפקיד שלך, את הפרוסס, את תהליך העבודה, את האזורים שאסור לי לרשום בהם, את הקונטקסט הבנקאי."</p>
+      <ul>
+        <li>Skill שמסביר איך לנתח את המבדק.</li>
+        <li>Skill שמסביר את הארכיטקטורה של הדשבורד.</li>
+        <li>Skill לפרטיות: <em>לא לרשום ת"ז בלוגים, להמיר תעודות זהות לזהויות פיקטיביות, GDPR.</em></li>
+        <li>ועוד שלושה.</li>
+      </ul>
+      <p>"<strong>בלי Skills, אנחנו בשיחה חוזרת על אותם דברים.</strong> עם Skills, זה כמו שיתוף פעולה מקצועי עם מומחה שכבר עבר אצלנו אונבורדינג."</p>
+    </div>
+    <div class="section tip">
+      <h3>אנקדוטה</h3>
+      <p>הסקיל <em>banking-data-privacy</em> תפס פעם באג שעלול היה לחשוף נתוני עובד. זה בא על חשבון 5 דקות של כתיבה ב-MD. <strong>זו הוכחה חיה ש-Skills עובדים.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S20 ============== -->
+<section class="slide" id="s20" data-num="20" data-title="פירמידת 211 דוחות">
+  <div class="slide-head">
+    <span class="slide-tag">Product Mindset</span>
+    <span class="slide-num">20 / 26</span>
+  </div>
+  <h1 class="slide-title">211 דוחות מותאמי Workflow</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~75 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-20.png" alt="שקף 20, פירמידה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"אחרי שהבנו שיש לנו פערים אישיים מדויקים, השאלה הייתה: <em>איך מציגים את זה?</em>"</p>
+      <p>"ניפצנו את אגדת ה-One Size Fits All. במקום דשבורד אחד לכולם, בנינו <strong>3 חוויות שונות</strong>:"</p>
+      <ul>
+        <li><strong>הרמה האסטרטגית</strong>, דשבורד הנהלה אחד, ל-VP ולסמנכ"לים. KPI, מפות חום אזוריות.</li>
+        <li><strong>הרמה הטקטית</strong>, 10 דוחות אזוריים, אחד לכל מנהלת אזור.</li>
+        <li><strong>הרמה הביצועית</strong>, <em>211 דוחות סניפיים</em>, לכל מנהל סניף, דוח שמתמקד באנשים שלו ורק שלהם.</li>
+      </ul>
+      <p>"<strong>ה-ROI האמיתי הוא בנגישות.</strong> מנהל סניף לא רוצה לראות את כל החטיבה. הוא רוצה לראות <em>את הסניף שלו</em>, ובלחיצה אחת לפתוח את ההדרכה הרלוונטית."</p>
+      <p>"ה-Integration עם Boost LMS היה הרגע שהפרויקט הפך מ'דוח מעניין' ל-<em>'כלי עבודה'</em>."</p>
+    </div>
+    <div class="section warn">
+      <h3>אופציה, הדגמה חיה</h3>
+      <p>אם יש זמן ויציבות, לחץ על "דשבורד חי" בשקף, וודא שהשרת המקומי רץ ב-<strong>localhost:3000</strong>. אם לא, אל תפתח, פאוזה אחת לא הופכת מצגת לכישלון.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S21 ============== -->
+<section class="slide" id="s21" data-num="21" data-title="העובד">
+  <div class="slide-head">
+    <span class="slide-tag">המוצר הנייד, Employee View</span>
+    <span class="slide-num">21 / 26</span>
+  </div>
+  <h1 class="slide-title">מה מקבל העובד/ת?</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~45 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-21.png" alt="שקף 21, העובד"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הזווית האנושית</h3>
+      <p>"רגע נצא מהמנהלים ונדבר על העובד עצמו."</p>
+      <p>"כשדנה, בנקאית בסניף 412, פותחת את LMS Boost בבוקר, מה היא רואה?"</p>
+      <p>"<em>אני יודע להגיד שדנה ענתה ככה לשאלה X, ככה לשאלה Y, והיא הייתה צריכה לענות אחרת.</em> ויש לי יחידות למידה רלוונטיות במערכת. <strong>בעצם, אני בונה את תוכנית הפיתוח של דנה אוטומטית, מהפערים שעלו אצלה.</strong>"</p>
+      <ul>
+        <li>תוכנית פיתוח אישית, AI Hyper-Personalization.</li>
+        <li>למידה עצמית, סרטונים קצרים, מאמרים, תרגולים, בקצב של דנה.</li>
+        <li>רישום למפגשים פרונטליים מתואמים ליום ושעה שלה.</li>
+        <li>Dashboard אישי שמראה התקדמות לאורך זמן.</li>
+      </ul>
+    </div>
+    <div class="section tip">
+      <h3>הפאנץ'</h3>
+      <p>"זה לא 'קורס שכולם צריכים לעשות'. זו <em>תוכנית פיתוח אישית של דנה</em>."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S22 ============== -->
+<section class="slide" id="s22" data-num="22" data-title="המנהל">
+  <div class="slide-head">
+    <span class="slide-tag">המוצר הנייד, Branch View</span>
+    <span class="slide-num">22 / 26</span>
+  </div>
+  <h1 class="slide-title">מה מקבל המנהל?</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~45 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-22.png" alt="שקף 22, המנהל"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הזווית הניהולית</h3>
+      <p>"ועכשיו, מנהלת הסניף, יעל, פותחת את אותה מערכת."</p>
+      <p>"מה היא רואה? <strong>מפת מומחיות צבעונית של כל הצוות שלה</strong>, עובד מול קטגוריה."</p>
+      <ul>
+        <li>ירוק 90%+, מומחים, להפוך אותם לחונכים.</li>
+        <li>צהוב 70-90%, יציבים.</li>
+        <li>כתום 50-70%, לחיזוק.</li>
+        <li>אדום מתחת ל-50%, <em>פער קריטי</em>, התערבות מיידית.</li>
+      </ul>
+      <p>"<strong>המבחן הופך לתוכנית עבודה שבועית. לא לדוח שנכנס למגירה.</strong>"</p>
+    </div>
+    <div class="section tip">
+      <h3>אנקדוטה</h3>
+      <p>"מנהלת אזור התקשרה אליי בשבוע השני: <em>'רגע, איך אני מסבירה את ה-95% של נועה? היא בעצם מומחית בהשקעות. אולי כדאי לחשוב עליה כחונכת'?</em> בדיוק זה הלקח, מהדשבורד יוצאות החלטות עסקיות, לא רק הדרכה."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S23 ============== -->
+<section class="slide" id="s23" data-num="23" data-title="לקחים">
+  <div class="slide-head">
+    <span class="slide-tag">Collaborative Intelligence</span>
+    <span class="slide-num">23 / 26</span>
+  </div>
+  <h1 class="slide-title">סיכום ולקחים</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~90 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-23.png" alt="שקף 23, לקחים"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות</h3>
+      <p>"מה הבנו, מה עבד, מה לא, ומה אני אעשה אחרת בפעם הבאה."</p>
+    </div>
+    <div class="section tip">
+      <h3>🟢 The Wins</h3>
+      <ul>
+        <li><em>Collaborative Intelligence</em>, LLM לביצוע מסיבי + תיקוף אנושי, חסך שבועות.</li>
+        <li><em>Agents & Skills</em>, צוות וירטואלי שהכריח הפרדת רשויות.</li>
+        <li><em>Agile AI</em>, איטרציות קצרות.</li>
+        <li><em>חוקים עסקיים ב-Skills</em>, מנעו 90% מהבאגים הלוגיים.</li>
+        <li><em>Session Summaries</em>, סיכום יומי שמקל אונבורדינג.</li>
+      </ul>
+    </div>
+    <div class="section warn">
+      <h3>🟡 The Growth</h3>
+      <ul>
+        <li>PRD מסודר לפני שורת קוד ראשונה.</li>
+        <li>ספריית פרומפטים מתועדת.</li>
+        <li>שילוב משתמשי קצה כבר בפרוטוטיפ.</li>
+      </ul>
+    </div>
+    <div class="section bad">
+      <h3>🔴 The Guardrails</h3>
+      <ul>
+        <li><strong>AI Confident Errors</strong>, AI טועה בביטחון מוחלט. <em>חובה לבדוק כל פתרון לוגית.</em></li>
+        <li><strong>הקשר רגולטורי</strong>, AI לא יודע בנקאות. צריך להגדיר כללים במפורש.</li>
+        <li><strong>הבנה עסקית</strong>, בלי "למה" עסקי, מקבלים פתרון טכני שלא רלוונטי.</li>
+      </ul>
+    </div>
+    <div class="section script">
+      <h3>הפאנץ'</h3>
+      <p>"ה-AI הוא <strong>מאיץ (Accelerator), לא מחליף</strong>. <em>אם אנחנו לא יודעים מה לעשות, ה-AI יהיה רק אנליסט מהיר שטועה.</em>"</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S24 ============== -->
+<section class="slide" id="s24" data-num="24" data-title="השורה התחתונה">
+  <div class="slide-head">
+    <span class="slide-tag">השורה התחתונה</span>
+    <span class="slide-num">24 / 26</span>
+  </div>
+  <h1 class="slide-title">AI זה לא קסם</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~30 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-24.png" alt="שקף 24, השורה התחתונה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הנקודה האחת</h3>
+      <p>"השורה התחתונה: <strong>AI זה לא קסם</strong>. זה דורש חשיבה, הבנה ועבודה מובנית."</p>
+      <p>"המתכון שלנו: <em>מומחי תוכן בנקאיים + מנהל מוצר + Claude Code (Skills + Subagents) + איטרציות קצרות</em>."</p>
+      <p>"ועם זה, בנינו מערכת לניתוח פערי ידע <strong>בימים, לא בחודשים, ובלי לשכור צוות פיתוח חיצוני</strong>."</p>
+      <p>"אנחנו עכשיו יודעים <em>מה</em> לא יודעים, <em>מי</em> לא יודע, ו<em>איזו</em> הדרכה לשלוח. ויכולים להוכיח את ההשפעה במספרים."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S25 ============== -->
+<section class="slide" id="s25" data-num="25" data-title="תודה">
+  <div class="slide-head">
+    <span class="slide-tag">CTA</span>
+    <span class="slide-num">25 / 26</span>
+  </div>
+  <h1 class="slide-title">תודה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~15 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-25.png" alt="שקף 25, תודה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, אמירת סיום</h3>
+      <p>"Agentic AI הוא לא רק קוד. הוא <strong>החופש שלכם</strong> לייצר פתרונות שמשנים מציאות בארגון."</p>
+      <p>"רגע, יש לנו <em>הפתעה אחת</em> לפני שאני יורד מהבמה."</p>
+    </div>
+    <div class="section tip">
+      <h3>טיפ</h3>
+      <p>פאוזה דרמטית קצרה לפני המעבר. אל תמהר.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== S26 ============== -->
+<section class="slide" id="s26" data-num="26" data-title="מתנה, Free Skill">
+  <div class="slide-head">
+    <span class="slide-tag">מתנה, Free Skill</span>
+    <span class="slide-num">26 / 26</span>
+  </div>
+  <h1 class="slide-title">Knowledge Gap Analysis Skill</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~30 שניות</span>
+  <div class="thumb"><img src="img/slides/slide-26.png" alt="שקף 26, מתנה"></div>
+  <div class="slide-body">
+    <div class="section script">
+      <h3>קריינות, הצעה</h3>
+      <p>"כל התהליך שדיברנו עליו, עשיתי לכם ממנו <strong>סקיל</strong>. עשיתי <em>reverse engineering</em> על הפרויקט שלנו, וייצאתי החוצה Skill חופשי."</p>
+      <p>"<strong>Knowledge Gap Analysis</strong>, פתוח להורדה ב-GitHub."</p>
+      <p>"סרקו את ה-QR בטלפון, או גשו ישירות לקישור. תוכלו להתקין את הסקיל ולהשתמש בו לכל פרויקט אצלכם."</p>
+      <p>"ואם נתקלים, <em>פנו אליי. אני בא לעזור.</em>"</p>
+    </div>
+    <div class="section tip">
+      <h3>הסגירה</h3>
+      <p>"תודה רבה לכם, אני אבי לוי. בואו לדבר איתי אחרי, יש לי שאלות אליכם!"</p>
+    </div>
+    <div class="section warn">
+      <h3>טיפ</h3>
+      <p><em>אל תחזור על השקף הבא.</em> הישאר עליו עד סוף השאלות.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Final, Speaker Reference ============== -->
+<section class="slide final" id="s27" data-num="ref" data-title="הערות כלליות">
+  <div class="slide-head">
+    <span class="slide-tag">הערות כלליות לדובר</span>
+    <span class="slide-num">REF</span>
+  </div>
+  <h1 class="slide-title">צ'קליסט הופעה ומענה לשאלות</h1>
+  <div class="accent-line"></div>
+  <div class="slide-body" style="grid-column: 1 / -1;">
+    <div class="final-grid">
+      <div class="section">
+        <h3>לפני התחלה</h3>
+        <ul>
+          <li>שרת localhost:3000 רץ (לחיצה על "דשבורד חי" בשקף 20).</li>
+          <li>קול עובד, וידאו בשקף 2 מתנגן.</li>
+          <li>index.html ב-Fullscreen (Cmd+Ctrl+F).</li>
+          <li>קיצורי מקלדת RTL: → קודם, ← הבא, Space הבא.</li>
+        </ul>
+      </div>
+      <div class="section warn">
+        <h3>אם נתקעים</h3>
+        <ul>
+          <li>שאלת חבל הצלה: "מה הייתם עושים אם הייתם בנעלינו?"</li>
+          <li>אנקדוטה רזרבית: ה-Validator שתפס באג של נתונים מעורבבים בין מחלקות, <em>דוגמה חיה ל-Skills שעובדים</em>.</li>
+        </ul>
+      </div>
+      <div class="section bad">
+        <h3>אם נשארים בלי זמן</h3>
+        <ul>
+          <li>דלג על שקף 21 (העובד) <em>או</em> 22 (המנהל), <strong>לא שניהם</strong>.</li>
+          <li><em>לעולם אל תדלג על</em>: 17, 18, 19 (HITL, Subagents, Skills), זה הלב.</li>
+        </ul>
+      </div>
+      <div class="section tip">
+        <h3>אם יש יותר מדי זמן</h3>
+        <ul>
+          <li>העמק בשקף 19 (Skills) עם דוגמה חיה של MD.</li>
+          <li>פתח את הדשבורד החי בשקף 20 והדגם ניווט.</li>
+        </ul>
+      </div>
+      <div class="section">
+        <h3>שאלות שיכולות לבוא, ותשובות מוכנות</h3>
+        <ul>
+          <li><strong>"כמה זמן זה לקח?"</strong> 3 שבועות מ-A עד Z, כולל איסוף נתונים.</li>
+          <li><strong>"מה זה עלה?"</strong> ~$100 ב-Claude Code, $0 בתשתית, הכל ב-localhost.</li>
+          <li><strong>"איך זה עומד ברגולציה?"</strong> נתונים לא יוצאים מהמחשב הנייד, אין שליחה לענן, banking-data-privacy SKILL אוכף.</li>
+          <li><strong>"האם זה רפליקבילי?"</strong> כן, כל ה-Skill פתוח ב-GitHub, אני בא לעזור.</li>
+          <li><strong>"מה ההבדל בין Skill לפרומפט?"</strong> פרומפט מנחה שיחה אחת. Skill מגדיר את ה-DNA של הסוכן, נטען אוטומטית בכל שיחה.</li>
+        </ul>
+      </div>
+      <div class="section">
+        <h3>תזכורות אישיות</h3>
+        <ul>
+          <li><strong>אל תקרא מהשקף.</strong> דבר אל הקהל. השקף הוא תפאורה.</li>
+          <li>בעת מענה על שאלה, <strong>חזור על השאלה</strong> לפני שאתה עונה (לטובת המקליטים).</li>
+          <li>אל תגיד "התקווה היא...", זה מסר חלש. תגיד <em>"אנחנו עושים..."</em> או <em>"אנחנו ראינו ש..."</em>.</li>
+          <li>פאוזות הן הכי חזקות. אל תמלא כל שתיקה.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="toc-toggle" id="toc-toggle" aria-label="פתח תוכן עניינים">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <button class="nav-btn" id="prev" aria-label="קודם">›</button>
+  <div class="nav-info">
+    <span class="now" id="now-title">פתיחה</span>
+    <span class="meta"><span id="now-num">1</span> מתוך 26</span>
+  </div>
+  <button class="nav-btn" id="next" aria-label="הבא">‹</button>
+</nav>
+
+<div class="swipe-hint" id="swipe-hint">החלק למעלה לשקף הבא</div>
+
+<script>
+(function() {
+  const deck = document.getElementById('deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.filter(s => s.id !== 's27').length;
+  const fill = document.getElementById('progress-fill');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const nowTitle = document.getElementById('now-title');
+  const nowNum = document.getElementById('now-num');
+  const toc = document.getElementById('toc');
+  const tocBack = document.getElementById('toc-back');
+  const tocToggle = document.getElementById('toc-toggle');
+  const tocList = document.getElementById('toc-list');
+  const hint = document.getElementById('swipe-hint');
+
+  // Build TOC
+  slides.forEach((s, i) => {
+    const num = s.dataset.num;
+    const title = s.dataset.title || '';
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + s.id;
+    a.dataset.idx = i;
+    a.innerHTML = `<span class="num">${num === 'ref' ? '✦' : String(num).padStart(2, '0')}</span><span>${title}</span>`;
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+  const tocLinks = tocList.querySelectorAll('a');
+
+  // Track active slide via IntersectionObserver
+  let active = 0;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio > 0.5) {
+        const idx = slides.indexOf(e.target);
+        if (idx !== -1) updateActive(idx);
+      }
+    });
+  }, { threshold: [0.5, 0.75], root: deck });
+  slides.forEach(s => io.observe(s));
+
+  function updateActive(idx) {
+    active = idx;
+    const s = slides[idx];
+    const num = s.dataset.num;
+    const title = s.dataset.title || '';
+    nowTitle.textContent = title;
+    nowNum.textContent = num === 'ref' ? '✦' : num;
+    const pct = num === 'ref' ? 100 : (parseInt(num, 10) / total) * 100;
+    fill.style.width = pct + '%';
+    prev.disabled = idx === 0;
+    next.disabled = idx === slides.length - 1;
+    tocLinks.forEach((a, i) => a.classList.toggle('active', i === idx));
+  }
+
+  function goTo(idx) {
+    idx = Math.max(0, Math.min(slides.length - 1, idx));
+    slides[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  prev.addEventListener('click', () => goTo(active - 1));
+  next.addEventListener('click', () => goTo(active + 1));
+
+  // Keyboard, RTL aware (right = prev, left = next, like the deck itself)
+  document.addEventListener('keydown', (e) => {
+    if (toc.classList.contains('open')) {
+      if (e.key === 'Escape') closeToc();
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(active + 1); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(active - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active - 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active + 1); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(slides.length - 1); }
+  });
+
+  // TOC drawer
+  function openToc() { toc.classList.add('open'); tocBack.classList.add('open'); }
+  function closeToc() { toc.classList.remove('open'); tocBack.classList.remove('open'); }
+  tocToggle.addEventListener('click', openToc);
+  tocBack.addEventListener('click', closeToc);
+  tocLinks.forEach(a => a.addEventListener('click', closeToc));
+
+  // First-time swipe hint (mobile)
+  if ('ontouchstart' in window && !sessionStorage.getItem('hintShown')) {
+    setTimeout(() => {
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 2400);
+      sessionStorage.setItem('hintShown', '1');
+    }, 1200);
+  }
+
+  // Initial state
+  updateActive(0);
+})();
+</script>
+
+</body>
+</html>
