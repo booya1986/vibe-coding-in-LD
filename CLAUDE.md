@@ -4,15 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-A **single-file HTML presentation** ("Vibe Coding in L&D") delivered at an Amdocs Meetup, branded for Bank Hapoalim's L&D division. There is no build step, no framework, no package manager — `index.html` is the deliverable. Everything (CSS, JS, slide HTML) lives in that one file. Media assets sit in `img/`, `vid/`, `sound/`.
+Two deliverables, both single-file HTML, no build step, no framework, no package manager:
+
+1. **`index.html`** — the **presentation deck** ("Vibe Coding in L&D") delivered at the Amdocs Meetup, branded for Bank Hapoalim's L&D division. CSS, JS, slide HTML all live in one file. Media assets in `img/`, `vid/`, `sound/`.
+2. **`speaker-notes.html`** — the **speaker-prep companion**: mobile-first one-slide-per-page reference with thumbnail (from `img/slides/slide-NN.png`), expanded narration, single continuous audio playback (`audio/narration.mp3`), TOC drawer, and bottom nav. Navigation is decoupled from audio: scrolling between slides does NOT pause/restart playback.
+
+The repo is published as a **public GitHub repo** at `booya1986/vibe-coding-in-LD` with GitHub Pages enabled at `https://booya1986.github.io/vibe-coding-in-LD/`. Both deliverables ship from `main` branch root.
 
 ## How to "run" / preview
 
 ```bash
-open index.html         # opens in default browser
+open index.html              # the deck (default browser)
+open speaker-notes.html      # the speaker companion
 ```
 
-That is the entire dev loop. Any edit → save → reload the browser tab.
+That is the entire dev loop. Any edit → save → reload the browser tab. Pushing to `main` auto-deploys to GitHub Pages within ~30-60 seconds.
 
 ## Critical conventions (these are non-negotiable rules the user has set)
 
@@ -155,6 +161,9 @@ Existing keyframes near each component's CSS:
 - **PNG with white background → transparent**: convert via Python Pillow (replace near-white pixels with alpha 0). Mix-blend-mode CSS doesn't fully erase white on a near-black page.
 - Reference image asset: `img/dashboard.png` (BI dashboard screenshot inside the browser frame on the day-of-execution slide).
 - Mascot image (Claude Code): `img/mascot.png`.
+- **`img/slides/slide-01.png` … `slide-26.png`** — 1600×900 thumbnails of every slide, used by `speaker-notes.html`. Regenerate via Playwright by loading `index.html`, calling `goTo(N)`, and screenshotting; freeze animations with a CSS override before capturing or `slide-15` (funnel) and `slide-17` will time out from continuous animations.
+- **`audio/narration.mp3`** — single continuous ~27 min Hebrew narration produced by ElevenLabs `eleven_v3` + voice `a1Vx4kQ93YUGGWHKxt55` ("Efi Ariely 4"), then concatenated from per-slide MP3s with `ffmpeg -f concat`. Only `narration.mp3` ships in git; per-slide chunks and `*.hash` cache files are gitignored.
+- **`GMT20260428-071117_Recording.m4a`** — internal Zoom rehearsal audio. **Always gitignored** (private). Whisper transcript at `/tmp/whisper-out/rehearsal.txt` is also private.
 
 ## Workflow when the user asks for changes
 
@@ -173,6 +182,54 @@ The user iterates fast and gives short feedback. Patterns I've learned:
 ## Project-scoped skill
 
 `.claude/skills/poalim-presentation/SKILL.md` is a project-local Claude Code skill that documents this design system and reusable components. Read it before redesigning any slide — it is the canonical reference for: design tokens, hard rules (no em-dashes, no emojis, white-only headings), all standard layouts, the full component catalogue, animation keyframes, and the navigation contract. Treat it as the spec; treat the index.html as the implementation.
+
+## Speaker prep companion (speaker-notes.html)
+
+Independent file, served from same Pages root. Mobile-first, designed for the speaker to prep on phone before the meetup.
+
+### Structure
+- 26 `<section class="slide" id="sNN" data-num="N" data-title="...">` blocks, each is `100vh` with `scroll-snap-align: start`.
+- Per slide: tag (top right), slide number, title, accent line, duration pill, thumbnail (`img/slides/slide-NN.png`), single `<div class="section">` containing only the **קריינות** (narration). All meta sections (mood/tone/anecdote/avoid) were removed by user request, only the actual script remains.
+- TOC drawer slides in from the left (RTL: `left: -100%; .open → left: 0`). Wrapped by `<aside class="toc">` and `<div class="toc-back">` overlay.
+- Bottom nav: TOC toggle, prev (›), title + slide-num, **Play button**, next (‹). RTL keyboard mapping is identical to `index.html`.
+
+### Audio playback (decoupled from navigation)
+- One global `Audio` element loads `audio/narration.mp3`. Single play button toggles play/pause.
+- Slide navigation (swipe, arrow keys, prev/next, TOC click) does **NOT** affect audio. Audio does NOT auto-advance slides. This decoupling is intentional and was the user's explicit request.
+- While playing, the play button shows elapsed time (`m:ss`) instead of a play icon.
+- `tts-status` line in the TOC drawer reflects load state (HEAD request to `audio/narration.mp3`).
+
+### Regenerating the audio
+1. Edit narration text inside `<div class="section">` blocks of `speaker-notes.html` (paragraphs and `<li>` items only; stage directions in `style="opacity:0.6"` paragraphs are skipped).
+2. Run:
+   ```bash
+   ELEVENLABS_API_KEY=xi-api-... python3 scripts/generate-audio.py
+   ```
+   The script uses `eleven_v3` model + voice `a1Vx4kQ93YUGGWHKxt55` ("Efi Ariely 4", Hebrew). Hash-cached: only slides whose text changed are re-rendered.
+3. Concatenate per-slide MP3s into the single narration file:
+   ```bash
+   cd audio
+   { for n in $(seq -f "%02g" 1 26); do echo "file 'slide-${n}.mp3'"; done } > concat-list.txt
+   ffmpeg -y -f concat -safe 0 -i concat-list.txt -c copy narration.mp3
+   rm concat-list.txt
+   ```
+4. Commit `audio/narration.mp3`. Per-slide files and `*.hash` are gitignored.
+
+The parser regex in `generate-audio.py` is `<(p|li)(\s[^>]*)?>(.*?)</\1>`. **Do not** change to `<(p|li)([^>]*)>` — that matches `<path>` SVG tags too, leaking SVG content into the narration.
+
+### Rehearsal-derived content (`rehearsal-extracts.md`)
+A curated extract from the Whisper transcript, organized per slide. Filtered to only substantive speaker content (no team chitchat / "wait, redo this" / Whisper noise). Use it as source-of-truth for what was said in rehearsal when revising the narration. Numbers from rehearsal worth verifying before the talk: questions count (rehearsal: 75 vs deck: 120+), respondents (1,250 vs ambiguous 1,068), 80% LLM accuracy.
+
+## Repo & deployment
+
+- **Git repo**: initialized with `gitignore`-ed sensitive items (rehearsal `.m4a`, transcripts, `.heic` source images, `__pycache__`, `.pdf-export/`, per-slide audio chunks, hash cache).
+- **Remote**: `https://github.com/booya1986/vibe-coding-in-LD` (public, owned by `booya1986`).
+- **GitHub Pages**: enabled on `main` branch, `/` path. Public URL `https://booya1986.github.io/vibe-coding-in-LD/`. Pages rebuild takes ~30-60s after `git push`. Verify with `gh api /repos/booya1986/vibe-coding-in-LD/pages` (look for `"status":"built"`).
+- **Public-facing URLs**:
+  - Deck: `https://booya1986.github.io/vibe-coding-in-LD/index.html`
+  - Speaker companion: `https://booya1986.github.io/vibe-coding-in-LD/speaker-notes.html`
+  - Audio: `https://booya1986.github.io/vibe-coding-in-LD/audio/narration.mp3`
+- **Sensitive content**: the deck and speaker notes contain bank-internal anecdotes, dollar amounts ($100), and process detail. The user accepted this for a public repo because the talk is being delivered publicly.
 
 ## When making changes
 
@@ -201,3 +258,6 @@ After any structural change, run through this list mentally before declaring the
 
 - **`.claude/skills/poalim-presentation/SKILL.md`** — the canonical spec for this design system. Project-scoped (NOT global). Read it before any non-trivial redesign.
 - This `CLAUDE.md` documents the project rules; the SKILL.md documents the reusable design system that can be applied to future Hapoalim presentations.
+- **`speaker-notes.html`** — speaker-prep companion (see "Speaker prep companion" section above). When asked to update narration, edit only the `<p>` / `<li>` content inside `<div class="section">` blocks; do not re-introduce per-slide play buttons or other section variants (`tip` / `warn` / `bad`) — they were explicitly removed.
+- **`rehearsal-extracts.md`** — curated phrases from the rehearsal transcript, organized per slide. Use as source when revising narration.
+- **`scripts/generate-audio.py`** — ElevenLabs TTS generator. Uses `eleven_v3` model + Hebrew cloned voice. Hash-cached; only changed slides re-render.
