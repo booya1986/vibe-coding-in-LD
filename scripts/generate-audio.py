@@ -22,9 +22,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HTML_PATH = REPO_ROOT / "speaker-notes.html"
 AUDIO_DIR = REPO_ROOT / "audio"
 
-# Hebrew voice. Default: Rachel (multilingual). Override with env.
-VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")  # Sarah, multilingual; works well for Hebrew
-MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
+# Hebrew, native-cloned voice (Efi Ariely 4) + Eleven v3 alpha (Hebrew supported).
+VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "a1Vx4kQ93YUGGWHKxt55")  # Efi Ariely 4, Hebrew
+MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_v3")
 
 # Optional: only regenerate slides whose text changed (md5)
 FORCE = os.environ.get("FORCE_REGEN", "0") == "1"

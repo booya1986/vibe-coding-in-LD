@@ -1176,7 +1176,7 @@
     else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active + 1); }
     else if (e.key === 'Home') { goTo(0); }
     else if (e.key === 'End') { goTo(slides.length - 1); }
-    else if (e.key === 'p' || e.key === 'P') { togglePlayAll(); }
+    else if (e.key === 'p' || e.key === 'P') { togglePlay(); }
   });
 
   // ===== TOC drawer =====
@@ -1186,87 +1186,60 @@
   tocBack.addEventListener('click', closeToc);
   tocLinks.forEach(a => a.addEventListener('click', closeToc));
 
-  // ===== Audio playback (pre-rendered ElevenLabs MP3 per slide) =====
-  // Audio files live at audio/slide-NN.mp3
-  const audio = new Audio();
-  audio.preload = 'auto';
-  let isPlayingAll = false;
-  let playingIdx = -1;
+  // ===== Audio playback, single continuous narration =====
+  // Plays audio/narration.mp3 (concatenation of all slides). Audio is
+  // decoupled from slide navigation: navigating slides does NOT affect
+  // playback, and playback does NOT auto-advance slides.
+  const audio = new Audio('audio/narration.mp3');
+  audio.preload = 'metadata';
+  let isPlaying = false;
 
-  function audioUrl(num) {
-    return 'audio/slide-' + String(num).padStart(2, '0') + '.mp3';
+  function fmtTime(sec) {
+    if (!isFinite(sec)) return '--:--';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + String(s).padStart(2, '0');
   }
 
-  function setSpeakingUI(slideIdx) {
-    slides.forEach((s, i) => {
-      s.querySelector('.section')?.classList.toggle('speaking', i === slideIdx);
-    });
-    playAllBtn.classList.toggle('playing-all', isPlayingAll);
-    playAllBtn.innerHTML = isPlayingAll
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> עצור'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> הכל';
+  function updatePlayBtn() {
+    playAllBtn.classList.toggle('playing-all', isPlaying);
+    const elapsed = fmtTime(audio.currentTime || 0);
+    const total = fmtTime(audio.duration || 0);
+    playAllBtn.innerHTML = isPlaying
+      ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> ${elapsed}`
+      : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> השמע`;
   }
 
-  function playFrom(idx) {
-    if (idx >= slides.length) { stopAll(); return; }
-    playingIdx = idx;
-    const slide = slides[idx];
-    const num = parseInt(slide.dataset.num, 10);
-    setSpeakingUI(idx);
-    goTo(idx);
-    audio.src = audioUrl(num);
-    audio.play().catch(err => {
-      console.warn('audio play failed', err);
-      ttsStatus.textContent = 'לא הצלחתי לטעון את האודיו (' + err.message + '). וודאי שתיקיית audio/ נוצרה.';
-      stopAll();
-    });
-  }
-
-  audio.addEventListener('ended', () => {
-    if (!isPlayingAll) { stopAll(); return; }
-    if (playingIdx < slides.length - 1) {
-      // tiny gap between slides
-      setTimeout(() => { if (isPlayingAll) playFrom(playingIdx + 1); }, 600);
-    } else {
-      stopAll();
-    }
-  });
-
+  audio.addEventListener('play', () => { isPlaying = true; updatePlayBtn(); });
+  audio.addEventListener('pause', () => { isPlaying = false; updatePlayBtn(); });
+  audio.addEventListener('ended', () => { isPlaying = false; audio.currentTime = 0; updatePlayBtn(); });
+  audio.addEventListener('timeupdate', () => { if (isPlaying) updatePlayBtn(); });
+  audio.addEventListener('loadedmetadata', updatePlayBtn);
   audio.addEventListener('error', () => {
-    if (audio.error && audio.error.code) {
-      ttsStatus.textContent = 'שגיאת אודיו, ודאי שקבצי MP3 קיימים תחת audio/';
-    }
-    stopAll();
+    ttsStatus.textContent = 'שגיאה בטעינת קובץ האודיו (audio/narration.mp3).';
   });
 
-  function stopAll() {
-    audio.pause();
-    audio.currentTime = 0;
-    isPlayingAll = false;
-    playingIdx = -1;
-    setSpeakingUI(-1);
-  }
-
-  function togglePlayAll() {
-    if (isPlayingAll) {
-      stopAll();
+  function togglePlay() {
+    if (isPlaying) {
+      audio.pause();
     } else {
-      isPlayingAll = true;
-      playFrom(active);
+      audio.play().catch(err => {
+        ttsStatus.textContent = 'לא הצלחתי לנגן: ' + err.message;
+      });
     }
   }
 
-  playAllBtn.addEventListener('click', togglePlayAll);
+  playAllBtn.addEventListener('click', togglePlay);
 
-  // Stop audio when leaving page
+  // Pause audio when tab/window closes
   window.addEventListener('beforeunload', () => audio.pause());
 
-  // Update status indicator
-  fetch('audio/manifest.json', { method: 'HEAD' }).then(r => {
+  // Status indicator (HEAD request to confirm file exists)
+  fetch('audio/narration.mp3', { method: 'HEAD' }).then(r => {
     if (r.ok) {
-      ttsStatus.textContent = 'קריינות מוכנה (ElevenLabs). לחצי "הכל" להשמעה רציפה.';
+      ttsStatus.textContent = 'הקריינות מוכנה. ~27 דקות. לחצי השמע.';
     } else {
-      ttsStatus.textContent = 'קבצי האודיו עדיין לא נוצרו. הריצי scripts/generate-audio.py.';
+      ttsStatus.textContent = 'קובץ הקריינות חסר. ראי scripts/generate-audio.py.';
     }
   }).catch(() => {});
 
