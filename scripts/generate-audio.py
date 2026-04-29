@@ -12,6 +12,7 @@ mp3 per slide via ElevenLabs Multilingual v2, and saves to audio/slide-NN.mp3.
 
 Run from repo root.
 """
+import json
 import os
 import re
 import sys
@@ -22,9 +23,23 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HTML_PATH = REPO_ROOT / "speaker-notes.html"
 AUDIO_DIR = REPO_ROOT / "audio"
 
-# Hebrew, native-cloned voice (Efi Ariely 4) + Eleven v3 alpha (Hebrew supported).
-VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "a1Vx4kQ93YUGGWHKxt55")  # Efi Ariely 4, Hebrew
-MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_v3")
+# Voice + model. Jessica is an ElevenLabs preset that delivers a punchy,
+# upbeat read; eleven_multilingual_v2 supports Hebrew + the `speed` param
+# we need for the snappier pacing the speaker asked for.
+VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "cgSgspJ2msm6clMCkdW9")  # Jessica (preset)
+MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
+
+# Voice settings tuned for a more rhythmic, energetic delivery:
+# - lower stability → more dynamic/expressive variation
+# - moderate style exaggeration → keeps emphasis on punchy phrases
+# - speed > 1 → snappier pace ("יותר קצבי")
+VOICE_SETTINGS = {
+    "stability": float(os.environ.get("VOICE_STABILITY", "0.35")),
+    "similarity_boost": float(os.environ.get("VOICE_SIMILARITY", "0.75")),
+    "style": float(os.environ.get("VOICE_STYLE", "0.55")),
+    "use_speaker_boost": True,
+    "speed": float(os.environ.get("VOICE_SPEED", "1.1")),
+}
 
 # Optional: only regenerate slides whose text changed (md5)
 FORCE = os.environ.get("FORCE_REGEN", "0") == "1"
@@ -101,8 +116,13 @@ def normalize_text(s: str) -> str:
 
 
 def text_hash(text: str) -> str:
+    """Cache key includes voice + settings so swapping voice/pace re-renders."""
     import hashlib
-    return hashlib.md5(text.encode("utf-8")).hexdigest()[:10]
+    payload = json.dumps(
+        {"v": VOICE_ID, "m": MODEL_ID, "s": VOICE_SETTINGS, "t": text},
+        sort_keys=True, ensure_ascii=False,
+    )
+    return hashlib.md5(payload.encode("utf-8")).hexdigest()[:10]
 
 
 def main():
@@ -116,6 +136,12 @@ def main():
     print(f"Parsed {len(slides)} slides.")
 
     eleven = load_eleven()
+    try:
+        from elevenlabs.types import VoiceSettings
+    except ImportError:
+        from elevenlabs import VoiceSettings  # older SDK layout
+    voice_settings = VoiceSettings(**VOICE_SETTINGS)
+    print(f"Voice: {VOICE_ID} | Model: {MODEL_ID} | Settings: {VOICE_SETTINGS}")
 
     manifest = []
     for s in slides:
@@ -137,6 +163,7 @@ def main():
                 model_id=MODEL_ID,
                 text=s["text"],
                 output_format="mp3_44100_128",
+                voice_settings=voice_settings,
             )
             with open(out_path, "wb") as f:
                 for chunk in audio_iter:

@@ -162,7 +162,7 @@ Existing keyframes near each component's CSS:
 - Reference image asset: `img/dashboard.png` (BI dashboard screenshot inside the browser frame on the day-of-execution slide).
 - Mascot image (Claude Code): `img/mascot.png`.
 - **`img/slides/slide-01.png` … `slide-26.png`** — 1600×900 thumbnails of every slide, used by `speaker-notes.html`. Regenerate via Playwright by loading `index.html`, calling `goTo(N)`, and screenshotting; freeze animations with a CSS override before capturing or `slide-15` (funnel) and `slide-17` will time out from continuous animations.
-- **`audio/narration.mp3`** — single continuous ~27 min Hebrew narration produced by ElevenLabs `eleven_v3` + voice `a1Vx4kQ93YUGGWHKxt55` ("Efi Ariely 4"), then concatenated from per-slide MP3s with `ffmpeg -f concat`. Only `narration.mp3` ships in git; per-slide chunks and `*.hash` cache files are gitignored.
+- **`audio/narration.mp3`** — continuous Hebrew narration produced by ElevenLabs `eleven_multilingual_v2` + voice `cgSgspJ2msm6clMCkdW9` ("Jessica" preset), with `VoiceSettings(stability=0.35, similarity_boost=0.75, style=0.55, speed=1.1, use_speaker_boost=True)` for a snappier, more rhythmic delivery (the speaker explicitly asked for "יותר קצבי"). Concatenated from per-slide MP3s with `ffmpeg -f concat`. Only `narration.mp3` ships in git; per-slide chunks and `*.hash` cache files are gitignored. The cache key now includes voice id + model + settings, so changing `ELEVENLABS_VOICE_ID` / `VOICE_SPEED` / etc. auto-invalidates all cached chunks and re-renders.
 - **`GMT20260428-071117_Recording.m4a`** — internal Zoom rehearsal audio. **Always gitignored** (private). Whisper transcript at `/tmp/whisper-out/rehearsal.txt` is also private.
 
 ## Workflow when the user asks for changes
@@ -205,7 +205,7 @@ Independent file, served from same Pages root. Mobile-first, designed for the sp
    ```bash
    ELEVENLABS_API_KEY=xi-api-... python3 scripts/generate-audio.py
    ```
-   The script uses `eleven_v3` model + voice `a1Vx4kQ93YUGGWHKxt55` ("Efi Ariely 4", Hebrew). Hash-cached: only slides whose text changed are re-rendered.
+   The script uses `eleven_multilingual_v2` model + voice `cgSgspJ2msm6clMCkdW9` ("Jessica" preset) with rhythmic `VoiceSettings` (stability 0.35, style 0.55, speed 1.1). Hash-cached including voice/settings: changing the voice or speed auto-re-renders everything; otherwise only slides whose text changed are re-rendered.
 3. Concatenate per-slide MP3s into the single narration file:
    ```bash
    cd audio
@@ -260,4 +260,4 @@ After any structural change, run through this list mentally before declaring the
 - This `CLAUDE.md` documents the project rules; the SKILL.md documents the reusable design system that can be applied to future Hapoalim presentations.
 - **`speaker-notes.html`** — speaker-prep companion (see "Speaker prep companion" section above). When asked to update narration, edit only the `<p>` / `<li>` content inside `<div class="section">` blocks; do not re-introduce per-slide play buttons or other section variants (`tip` / `warn` / `bad`) — they were explicitly removed.
 - **`rehearsal-extracts.md`** — curated phrases from the rehearsal transcript, organized per slide. Use as source when revising narration.
-- **`scripts/generate-audio.py`** — ElevenLabs TTS generator. Uses `eleven_v3` model + Hebrew cloned voice. Hash-cached; only changed slides re-render.
+- **`scripts/generate-audio.py`** — ElevenLabs TTS generator. Uses `eleven_multilingual_v2` + Jessica preset voice with rhythmic VoiceSettings (speed 1.1, lower stability for variation). Hash-cached including voice/settings; changing any of those re-renders everything.
