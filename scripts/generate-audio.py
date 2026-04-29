@@ -23,22 +23,20 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HTML_PATH = REPO_ROOT / "speaker-notes.html"
 AUDIO_DIR = REPO_ROOT / "audio"
 
-# Voice + model. Jessica is an ElevenLabs preset that delivers a punchy,
-# upbeat read; eleven_multilingual_v2 supports Hebrew + the `speed` param
-# we need for the snappier pacing the speaker asked for.
+# Voice + model. Jessica preset on `eleven_v3` is the proven Hebrew recipe
+# (the wirtten/Jarvis simulation project flagged: eleven_multilingual_v2
+# does NOT produce Hebrew, only eleven_v3 does).
 VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "cgSgspJ2msm6clMCkdW9")  # Jessica (preset)
-MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2")
+MODEL_ID = os.environ.get("ELEVENLABS_MODEL", "eleven_v3")
 
-# Voice settings tuned for a more rhythmic, energetic delivery:
-# - lower stability → more dynamic/expressive variation
-# - moderate style exaggeration → keeps emphasis on punchy phrases
-# - speed > 1 → snappier pace ("יותר קצבי")
+# Voice settings approved by the speaker (matches the Jarvis/comunication
+# simulation recipe): rhythmic, expressive Hebrew delivery.
 VOICE_SETTINGS = {
-    "stability": float(os.environ.get("VOICE_STABILITY", "0.35")),
-    "similarity_boost": float(os.environ.get("VOICE_SIMILARITY", "0.75")),
-    "style": float(os.environ.get("VOICE_STYLE", "0.55")),
+    "stability": float(os.environ.get("VOICE_STABILITY", "0.3")),
+    "similarity_boost": float(os.environ.get("VOICE_SIMILARITY", "0.7")),
+    "style": float(os.environ.get("VOICE_STYLE", "0.4")),
     "use_speaker_boost": True,
-    "speed": float(os.environ.get("VOICE_SPEED", "1.1")),
+    "speed": float(os.environ.get("VOICE_SPEED", "1.15")),
 }
 
 # Optional: only regenerate slides whose text changed (md5)
