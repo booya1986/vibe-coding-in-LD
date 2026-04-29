@@ -4156,6 +4156,41 @@
       justify-content: center;
     }
 
+    /* ─── Fullscreen toggle ─────────────────────────────────────── */
+    #fullscreen-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 22px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(17,17,17,0.65);
+      backdrop-filter: blur(12px);
+      color: var(--text-2);
+      cursor: pointer;
+      z-index: 90;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0;
+      opacity: 0.55;
+      transition: opacity 0.3s, border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.2s;
+    }
+    #fullscreen-btn:hover {
+      opacity: 1;
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow), 0 0 30px var(--accent-glow2);
+      transform: scale(1.08);
+    }
+    #fullscreen-btn svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+    }
+
     /* ─── Keyboard hint ─────────────────────────────────────────── */
     #kbd-hint {
       position: fixed;
@@ -6107,9 +6142,12 @@
   <!-- Live region for screen reader -->
   <div class="sr-only" aria-live="polite" id="slide-announce"></div>
 
+  <!-- Fullscreen toggle (also bound to F key) -->
+  <button id="fullscreen-btn" aria-label="מסך מלא (F)" title="מסך מלא · F" type="button"></button>
+
   <!-- Keyboard hint -->
   <div id="kbd-hint" aria-hidden="true">
-    <span class="kbd">←</span><span class="kbd">→</span><span class="kbd">Space</span>
+    <span class="kbd">←</span><span class="kbd">→</span><span class="kbd">Space</span><span class="kbd">F</span>
     <span class="kbd-text">לניווט</span>
   </div>
 
@@ -6408,7 +6446,35 @@
     prevBtn.addEventListener('click', goPrev);
     nextBtn.addEventListener('click', goNext);
 
-    // Keyboard (RTL: → = back, ← = forward; Space = forward; Backspace/PageUp = back)
+    // ─── Fullscreen toggle (F key + button) ────────────────────────
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const FS_ICON_EXPAND   = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+    const FS_ICON_COLLAPSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+    function isFullscreen() {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+    function toggleFullscreen() {
+      if (isFullscreen()) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+      } else {
+        const el = document.documentElement;
+        const req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (req) req.call(el);
+      }
+    }
+    function syncFullscreenIcon() {
+      const fs = isFullscreen();
+      fullscreenBtn.innerHTML = fs ? FS_ICON_COLLAPSE : FS_ICON_EXPAND;
+      fullscreenBtn.setAttribute('aria-label', fs ? 'יציאה ממסך מלא (F)' : 'מסך מלא (F)');
+      fullscreenBtn.setAttribute('title', fs ? 'יציאה ממסך מלא · F' : 'מסך מלא · F');
+    }
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', syncFullscreenIcon);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenIcon);
+    syncFullscreenIcon();
+
+    // Keyboard (RTL: → = back, ← = forward; Space = forward; Backspace/PageUp = back; F = fullscreen)
     document.addEventListener('keydown', e => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (e.key === 'ArrowRight' || e.key === 'PageUp' || e.key === 'Backspace') {
@@ -6418,6 +6484,10 @@
       if (e.key === 'ArrowLeft' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') {
         e.preventDefault();
         goNext();
+      }
+      if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        toggleFullscreen();
       }
     });
 
