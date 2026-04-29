@@ -6064,6 +6064,40 @@
       </div>
     </div>
 
+    <!-- Bonus / PRD Template -->
+    <div class="slide" data-layout="cta" style="justify-content:center;gap:18px;">
+      <span class="slide-label">בונוס · prd template</span>
+
+      <div class="gift-card">
+        <div class="gift-card-left">
+          <div class="gift-qr">
+            <img src="img/prd-template-qr.png" alt="QR code linking to the PRD Template site">
+          </div>
+          <div class="gift-scan">Scan with your phone camera</div>
+          <div class="gift-url">booya1986.github.io/PRD_Tamplet</div>
+        </div>
+
+        <div class="gift-card-right">
+          <span class="gift-badge">Free PRD Template</span>
+          <h2 class="gift-title">PRD Template</h2>
+          <p class="gift-subtitle">A comprehensive Product Requirements Document template, turn vague ideas into a structured spec your team and your AI agents can actually build from.</p>
+
+          <div class="gift-what">
+            <div class="gift-what-title">What you get</div>
+            <ul class="gift-what-list">
+              <li>14 ready-made sections, from purpose and goals to approvals and appendix</li>
+              <li>Functional &amp; non-functional requirements with structured prompts</li>
+              <li>User stories, personas, scope, and use-case scaffolding</li>
+              <li>Timeline, milestones, success metrics, and KPIs</li>
+              <li>Open questions, risks, and stakeholder sign-off blocks</li>
+            </ul>
+          </div>
+
+          <div class="gift-footer">Open source, free to fork and adapt for any product, team, or domain</div>
+        </div>
+      </div>
+    </div>
+
   </div>
   <!-- /slide-container -->
 
@@ -6090,7 +6124,7 @@
     const slideVideo = document.getElementById('slide-video');
     const VIDEO_SLIDE = 1;
     const GURU_SLIDE = 2;
-    const GIFT_SLIDE = total - 1;
+    const BONUS_SLIDES = [total - 2, total - 1]; // Free Skill + PRD Template, both fire confetti
     const guruSound = new Audio('sound/sound3.mp3');
     const announce = document.getElementById('slide-announce');
     let userHasInteracted = false;
@@ -6128,14 +6162,15 @@
       'סיכום ולקחים',
       'AI זה לא קסם',
       'תודה',
-      'מתנה'
+      'מתנה',
+      'בונוס PRD'
     ];
 
     // Per-slide transition duration (ms). Default 520; tuned slightly per slide.
     const TRANSITION_DUR = {
       4: 380, 5: 380, 6: 380, 7: 380, // stat run, snappier
       8: 680,                          // → divider, weightier
-      24: 640, 25: 640                 // → תודה, gift
+      24: 640, 25: 640, 26: 640        // → תודה, gift, prd bonus
     };
     const DEFAULT_DUR = 520;
     const TRANS_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -6362,7 +6397,7 @@
         guruSound.currentTime = 0;
         guruSound.play().catch(() => {});
       }
-      if (newIndex === GIFT_SLIDE && prevIndex !== GIFT_SLIDE) {
+      if (BONUS_SLIDES.includes(newIndex) && newIndex !== prevIndex) {
         fireConfetti();
       }
     }
