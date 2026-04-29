@@ -4156,6 +4156,22 @@
       justify-content: center;
     }
 
+    /* ─── Blackout overlay (clicker B / "." key) ───────────────── */
+    #blackout {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    #blackout.active {
+      opacity: 1;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
     /* ─── Fullscreen toggle ─────────────────────────────────────── */
     #fullscreen-btn {
       position: fixed;
@@ -6145,6 +6161,9 @@
   <!-- Fullscreen toggle (also bound to F key) -->
   <button id="fullscreen-btn" aria-label="מסך מלא (F)" title="מסך מלא · F" type="button"></button>
 
+  <!-- Blackout overlay for clicker "black screen" key -->
+  <div id="blackout" aria-hidden="true"></div>
+
   <!-- Keyboard hint -->
   <div id="kbd-hint" aria-hidden="true">
     <span class="kbd">←</span><span class="kbd">→</span><span class="kbd">Space</span><span class="kbd">F</span>
@@ -6474,16 +6493,53 @@
     document.addEventListener('webkitfullscreenchange', syncFullscreenIcon);
     syncFullscreenIcon();
 
-    // Keyboard (RTL: → = back, ← = forward; Space = forward; Backspace/PageUp = back; F = fullscreen)
+    // ─── Clicker blackout overlay (B / "." key) ────────────────────
+    const blackout = document.getElementById('blackout');
+    function setBlackout(on) { blackout.classList.toggle('active', !!on); }
+    function isBlackedOut() { return blackout.classList.contains('active'); }
+    blackout.addEventListener('click', () => setBlackout(false));
+
+    // Keyboard + clicker remote (RTL deck: → = back, ← = forward.
+    // Standard clicker keys: PageUp/PageDown nav; F5 = start; Esc = exit FS (browser);
+    // B / "." = black screen; Home/End = first/last slide; F = fullscreen toggle)
     document.addEventListener('keydown', e => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+      // Black-screen toggle (PowerPoint convention used by most clickers)
+      if ((e.key === 'b' || e.key === 'B' || e.key === '.') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setBlackout(!isBlackedOut());
+        return;
+      }
+      // Any other handled key dismisses the blackout, then runs its action
+      if (isBlackedOut()) setBlackout(false);
+
       if (e.key === 'ArrowRight' || e.key === 'PageUp' || e.key === 'Backspace') {
         e.preventDefault();
         goPrev();
+        return;
       }
       if (e.key === 'ArrowLeft' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') {
         e.preventDefault();
         goNext();
+        return;
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        goTo(0);
+        return;
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        goTo(total - 1);
+        return;
+      }
+      if (e.key === 'F5') {
+        // Start-presentation key on most clickers: enter fullscreen, jump to first slide
+        e.preventDefault();
+        if (!isFullscreen()) toggleFullscreen();
+        goTo(0);
+        return;
       }
       if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
