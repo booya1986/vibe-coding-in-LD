@@ -181,7 +181,7 @@ The user iterates fast and gives short feedback. Patterns I've learned:
 
 ## Project-scoped skill
 
-`.claude/skills/poalim-presentation/SKILL.md` is a project-local Claude Code skill that documents this design system and reusable components. Read it before redesigning any slide — it is the canonical reference for: design tokens, hard rules (no em-dashes, no emojis, white-only headings), all standard layouts, the full component catalogue, animation keyframes, and the navigation contract. Treat it as the spec; treat the index.html as the implementation.
+`../.claude/skills/poalim-presentation/SKILL.md` (lives at the `poalim projects/` level so every Poalim folder can use it; this repo reaches it through the symlink `.claude/skills/poalim-presentation`, because skill discovery stops at the repo root) is the Claude Code skill that documents this design system and reusable components. Read it before redesigning any slide — it is the canonical reference for: design tokens, hard rules (no em-dashes, no emojis, white-only headings), all standard layouts, the full component catalogue, animation keyframes, and the navigation contract. Treat it as the spec; treat the index.html as the implementation.
 
 ## Speaker prep companion (speaker-notes.html)
 
@@ -256,7 +256,7 @@ After any structural change, run through this list mentally before declaring the
 
 ## Reference library
 
-- **`.claude/skills/poalim-presentation/SKILL.md`** — the canonical spec for this design system. Project-scoped (NOT global). Read it before any non-trivial redesign.
+- **`../.claude/skills/poalim-presentation/SKILL.md`** — the canonical spec for this design system. Scoped to `poalim projects/` (NOT global); it treats this folder's `index.html` as its reference deck. Read it before any non-trivial redesign.
 - This `CLAUDE.md` documents the project rules; the SKILL.md documents the reusable design system that can be applied to future Hapoalim presentations.
 - **`speaker-notes.html`** — speaker-prep companion (see "Speaker prep companion" section above). When asked to update narration, edit only the `<p>` / `<li>` content inside `<div class="section">` blocks; do not re-introduce per-slide play buttons or other section variants (`tip` / `warn` / `bad`) — they were explicitly removed.
 - **`rehearsal-extracts.md`** — curated phrases from the rehearsal transcript, organized per slide. Use as source when revising narration.
