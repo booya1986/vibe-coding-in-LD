@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0c0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>הערות דובר, Pre-Boarding בעזרת Vibe Coding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0c;
+    --bg-2: #161616;
+    --bg-3: #1c1c1c;
+    --accent: #FF2020;
+    --accent-light: #FF6060;
+    --accent-glow: rgba(255,32,32,0.45);
+    --accent-glow2: rgba(255,32,32,0.18);
+    --text-1: #ffffff;
+    --text-2: #d4d4d4;
+    --text-3: #8a8a8a;
+    --text-4: #5e5e5e;
+    --border: rgba(255,255,255,0.08);
+    --border-h: rgba(255,32,32,0.4);
+    --safe-bot: env(safe-area-inset-bottom, 0);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-2);
+    font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    direction: rtl;
+    text-align: right;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse at top, rgba(255,32,32,0.05), transparent 60%),
+      linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: auto, 60px 60px, 60px 60px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .progress {
+    position: fixed; top: 0; right: 0; left: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    z-index: 50;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent-light), var(--accent));
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.25s ease;
+  }
+
+  .deck {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .slide {
+    min-height: 100vh;
+    min-height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    padding: 18px 16px calc(72px + var(--safe-bot)) 16px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .slide-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; padding-top: 6px;
+  }
+  .slide-tag {
+    font-size: 0.65rem; font-weight: 700;
+    color: var(--accent-light);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .slide-tag::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .slide-num {
+    font-size: 0.75rem; color: var(--text-4);
+    font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+
+  .slide-title {
+    margin: 0; color: var(--text-1);
+    font-size: clamp(1.15rem, 4.5vw, 1.7rem);
+    font-weight: 800; letter-spacing: -0.01em; line-height: 1.25;
+  }
+  .accent-line {
+    width: 36px; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin: -4px 0 0;
+  }
+  .duration-pill {
+    align-self: flex-start;
+    background: rgba(255,32,32,0.1);
+    border: 1px solid rgba(255,32,32,0.25);
+    color: var(--accent-light);
+    font-size: 0.72rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 100px;
+  }
+
+  .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden; position: relative;
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    display: block; object-fit: cover;
+  }
+
+  .section {
+    padding: 14px 16px;
+    background: rgba(255,32,32,0.06);
+    border-right: 2px solid var(--accent);
+    border-radius: 4px 8px 8px 4px;
+    font-size: 1rem; line-height: 1.85;
+    position: relative;
+  }
+  .section .head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px; gap: 10px;
+  }
+  .section h3 {
+    margin: 0;
+    font-size: 0.66rem; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+  .section p { margin: 6px 0; color: var(--text-1); }
+  .section ul, .section ol { margin: 6px 0; padding-right: 22px; }
+  .section li { margin: 4px 0; color: var(--text-1); }
+  .section strong { font-weight: 700; }
+  .section em { color: var(--accent-light); font-style: normal; font-weight: 600; }
+  .section .quote {
+    border-right: 3px solid var(--accent);
+    padding: 6px 14px; margin: 10px 0;
+    color: var(--text-1); font-style: italic;
+    background: rgba(255,32,32,0.1);
+    border-radius: 0 6px 6px 0;
+  }
+  .section.speaking {
+    box-shadow: 0 0 0 2px var(--accent), 0 0 24px rgba(255,32,32,0.4);
+  }
+
+  .play-btn {
+    flex-shrink: 0;
+    height: 32px;
+    border: 1px solid var(--accent);
+    background: rgba(255,32,32,0.15);
+    color: var(--accent-light);
+    font-family: inherit; font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0 12px;
+    border-radius: 100px;
+    display: inline-flex; align-items: center; gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .play-btn:hover, .play-btn:active {
+    background: var(--accent);
+    color: var(--text-1);
+  }
+  .play-btn.playing {
+    background: var(--accent);
+    color: var(--text-1);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,32,32,0.6); }
+    50% { box-shadow: 0 0 0 8px rgba(255,32,32,0); }
+  }
+  .play-btn svg { width: 14px; height: 14px; }
+
+  /* Bottom navigation */
+  .nav {
+    position: fixed;
+    bottom: 0; right: 0; left: 0;
+    height: calc(60px + var(--safe-bot));
+    padding: 0 12px var(--safe-bot);
+    background: rgba(12,12,12,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+    z-index: 40;
+  }
+  .nav-btn {
+    flex: 0 0 44px;
+    height: 44px;
+    border-radius: 22px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-h);
+    color: var(--accent-light);
+    font-size: 1.4rem; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover, .nav-btn:active {
+    background: var(--accent); color: var(--text-1);
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn.wide {
+    flex: 0 0 auto;
+    padding: 0 14px;
+    font-size: 0.8rem;
+    gap: 6px;
+    border-radius: 22px;
+  }
+  .nav-btn.wide.playing-all {
+    background: var(--accent);
+    color: var(--text-1);
+    border-color: var(--accent);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .nav-btn svg { width: 18px; height: 18px; }
+  .nav-info {
+    flex: 1; text-align: center;
+    color: var(--text-3); font-size: 0.78rem;
+    line-height: 1.3; overflow: hidden;
+    white-space: nowrap; text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .nav-info .now {
+    color: var(--text-1); font-weight: 700;
+    display: block; font-size: 0.85rem;
+    text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+  }
+  .nav-info .meta { font-size: 0.7rem; color: var(--text-4); }
+
+  .toc-toggle {
+    flex: 0 0 44px; height: 44px;
+    border-radius: 22px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .toc-toggle svg { width: 22px; height: 22px; }
+
+  .toc {
+    position: fixed; top: 0; bottom: 0; left: -100%;
+    width: 86%; max-width: 360px;
+    background: var(--bg-2);
+    border-left: 1px solid var(--border-h);
+    padding: 24px 18px calc(24px + var(--safe-bot));
+    overflow-y: auto;
+    transition: left 0.28s ease;
+    z-index: 60;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  }
+  .toc.open { left: 0; }
+  .toc-back {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 55;
+  }
+  .toc-back.open { opacity: 1; pointer-events: auto; }
+  .toc h2 {
+    margin: 0 0 4px; color: var(--text-1);
+    font-size: 1rem; font-weight: 800;
+  }
+  .toc-sub {
+    color: var(--text-4); font-size: 0.75rem;
+    margin: 0 0 16px;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; border-bottom: 1px solid var(--border); }
+  .toc a {
+    display: flex; gap: 10px; align-items: baseline;
+    padding: 9px 4px;
+    color: var(--text-2); text-decoration: none;
+    font-size: 0.86rem; line-height: 1.35;
+  }
+  .toc a:hover, .toc a.active { color: var(--accent-light); }
+  .toc a.active { font-weight: 700; }
+  .toc a .num {
+    color: var(--text-4); font-variant-numeric: tabular-nums;
+    font-weight: 700; min-width: 24px; flex-shrink: 0;
+  }
+  .toc a.active .num { color: var(--accent); }
+
+  /* TTS settings popover */
+  .tts-settings {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .tts-settings h3 {
+    margin: 0 0 10px;
+    color: var(--accent-light);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .tts-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 8px;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--text-2);
+  }
+  .tts-row label { flex: 1; }
+  .tts-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+  .tts-row select {
+    background: var(--bg-3);
+    color: var(--text-1);
+    border: 1px solid var(--border);
+    padding: 4px 6px;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.78rem;
+    max-width: 60%;
+  }
+  .tts-status {
+    font-size: 0.72rem;
+    color: var(--text-4);
+    margin-top: 8px;
+  }
+
+  /* iPad/Desktop, two-column inside slide body */
+  @media (min-width: 820px) {
+    .slide {
+      padding: 32px 36px calc(80px + var(--safe-bot));
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto 1fr;
+      gap: 16px 32px;
+      align-items: start;
+    }
+    .slide-head { grid-column: 1 / -1; }
+    .slide-title { grid-column: 1 / -1; font-size: clamp(1.4rem, 2.2vw, 2rem); }
+    .accent-line { grid-column: 1 / -1; }
+    .duration-pill { grid-column: 1 / -1; }
+    .thumb { grid-column: 1 / 2; grid-row: 5 / 6; align-self: start; }
+    .slide-body { grid-column: 2 / 3; grid-row: 5 / 6; display: flex; flex-direction: column; gap: 12px; }
+  }
+  @media (max-width: 819px) {
+    .slide-body { display: flex; flex-direction: column; gap: 10px; }
+  }
+
+  @media print {
+    body { background: white; color: #111; }
+    .progress, .nav, .toc, .toc-back, .play-btn { display: none !important; }
+    .deck { height: auto; overflow: visible; scroll-snap-type: none; }
+    .slide {
+      page-break-after: always; break-after: page;
+      min-height: auto; background: white !important; color: #111;
+    }
+    .slide-title, .section strong { color: #111 !important; }
+    .section { background: #fff5f5 !important; color: #222; border-right-color: #c00 !important; }
+    .section h3 { color: #c00 !important; }
+    .section p, .section li { color: #111 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+
+<div class="toc-back" id="toc-back"></div>
+<aside class="toc" id="toc">
+  <h2>הערות דובר</h2>
+  <p class="toc-sub">Pre-Boarding בעזרת Vibe Coding, 16 שקפים, ~13 דקות</p>
+  <ol id="toc-list"></ol>
+  <div class="tts-settings">
+    <h3>השמעה</h3>
+    <p class="tts-status" id="tts-status">אין הקלטה עדיין. הקריינות מוצגת כטקסט בלבד.</p>
+  </div>
+</aside>
+
+<main class="deck" id="deck">
+
+<section class="slide" id="s01" data-num="1" data-title="Pre-Boarding בעזרת Vibe Coding">
+  <div class="slide-head">
+    <span class="slide-tag">פתיחה</span>
+    <span class="slide-num">01 / 16</span>
+  </div>
+  <h1 class="slide-title">Pre-Boarding בעזרת Vibe Coding</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~40 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-01.png" alt="שקף 1"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, פתיחה</h3>
+      <p>"שלום לכולם. אני אבי לוי, מנהל ב-L&amp;D של בנק הפועלים. הנושא שלנו היום: איך אפשר לשפר את ה-Pre-Boarding בעזרת Vibe Coding."</p>
+      <p>"בקצרה, ניקח את <em>הזמן הריק</em> שבין חתימת חוזה לבין יום ראשון, ונהפוך אותו ל<strong>זמן של בניית חיבור אישי</strong>. בלי תקציב פיתוח, בלי לכתוב שורת קוד אחת."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s02" data-num="2" data-title="תחשבו על השבוע הראשון שלכם">
+  <div class="slide-head">
+    <span class="slide-tag">פתיח רגשי</span>
+    <span class="slide-num">02 / 16</span>
+  </div>
+  <h1 class="slide-title">תחשבו על השבוע הראשון שלכם</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~50 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-02.png" alt="שקף 2"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, להניח את הקהל בנעלי העובד החדש</h3>
+      <p>"רגע לפני שנכנס לעניינים, תחשבו על השבוע הראשון שלכם בעבודה כלשהי. <em>איפה אתם נמצאים בראש?</em>"</p>
+      <p>"כולם מכירים את כולם, חוץ מכם. אתם מנסים להבין דינמיקה, לזכור שמות, להבין ציפיות, להבין נהלים, ובמקביל לעשות עבודה."</p>
+      <p>"<strong>במקרה הטוב זה מבלבל. במקרה הפחות טוב זה ממש פוגע בביטחון העצמי</strong>. וזה הפער שאנחנו רוצים לסגור."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s03" data-num="3" data-title="הימים הראשונים מעצבים הכל">
+  <div class="slide-head">
+    <span class="slide-tag">הבסיס</span>
+    <span class="slide-num">03 / 16</span>
+  </div>
+  <h1 class="slide-title">הימים הראשונים מעצבים הכל</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~75 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-03.png" alt="שקף 3"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, שלוש התחושות המכריעות</h3>
+      <p>"לחוויה הראשונית בארגון יש השפעה מכרעת. היא בונה <em>שלוש תחושות שילוו את העובד הרבה אחרי</em>."</p>
+      <p>"ראשונה, <strong>שייכות</strong>. 'יש לי מקום פה, חיכו לי, ראו אותי'. בלי שייכות, גם הכישרון הכי טוב לא יישאר."</p>
+      <p>"שנייה, <strong>מסוגלות</strong>. 'אני מבין מה מצפים ממני, ואני יכול לעמוד בזה'. בלי מסוגלות, הביטחון העצמי נשבר."</p>
+      <p>"שלישית, <strong>ביטחון</strong>. 'יש לי למי לפנות, אני לא לבד עם השאלות'. ביטחון הוא הבסיס לקחת סיכונים, לנסות, ללמוד."</p>
+      <p>"<em>אם נכוון לשלוש התחושות האלה כבר לפני יום ראשון, הקליטה הופכת מאירוע מבלבל לחוויה מעצימה.</em>"</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s04" data-num="4" data-title="מה הארגון נותן היום">
+  <div class="slide-head">
+    <span class="slide-tag">הסטנדרט</span>
+    <span class="slide-num">04 / 16</span>
+  </div>
+  <h1 class="slide-title">מה הארגון נותן היום</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~45 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-04.png" alt="שקף 4"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, מהי החוברת ולמה היא לא מספיקה</h3>
+      <p>"מה הארגון נותן היום, ברירת המחדל? <strong>חוברת קליטה</strong> מצוינת, עם חזון, ערכים ומבנה החטיבה. <strong>מסמכי קריאה</strong> לפני יום ראשון. <strong>תזכורת לשיחת טלפון</strong> שבוע לפני התחלה."</p>
+      <p>"הכל מקצועי, הכל מסודר. אבל <em>אותה חוברת מקבל כל אחד</em>. אין שם דבר שמתאים לעובד הספציפי שאני קולט. <strong>זה הפער שאנחנו ננסה לסגור</strong>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s05" data-num="5" data-title="מה אם נתחיל לפני היום הראשון?">
+  <div class="slide-head">
+    <span class="slide-tag">מעבר</span>
+    <span class="slide-num">05 / 16</span>
+  </div>
+  <h1 class="slide-title">מה אם נתחיל לפני היום הראשון?</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-05.png" alt="שקף 5"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, כותרת המקטע</h3>
+      <p>"אז נכנסנו לשלב המוקדם, ה-<strong>Pre-Boarding</strong>. השבועיים שבין חתימת חוזה ליום ראשון."</p>
+      <p>"<em>רוב הארגונים נותנים להם להתבזבז. הם זמן זהב</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s06" data-num="6" data-title="14 ימים שבין חתימה להתחלה">
+  <div class="slide-head">
+    <span class="slide-tag">ההזדמנות</span>
+    <span class="slide-num">06 / 16</span>
+  </div>
+  <h1 class="slide-title">14 ימים שבין חתימה להתחלה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~60 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-06.png" alt="שקף 6"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, שלוש פרספקטיבות על אותה תקופה</h3>
+      <p>"בשגרה ה-14 ימים האלה הם זמן ריק. אבל אם נסתכל מבעד לשלוש זוויות, נראה כמה הזמן הזה עשיר."</p>
+      <p>"<strong>לעובד</strong>, זאת תקופה של ציפייה ולחץ. 'מה ילבשו? מי אני בעצם? למה לא שולחים לי כלום?'."</p>
+      <p>"<strong>לארגון</strong>, זה חלון פתוח להגיד 'ראינו אותך, אנחנו מחכים', ולבנות חיבור."</p>
+      <p>"<strong>למנהל</strong>, זאת הזדמנות להפוך את היום הראשון מהפתעה ל<em>חזרה למקום מוכר</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s07" data-num="7" data-title="כלי AI במקום שורות קוד">
+  <div class="slide-head">
+    <span class="slide-tag">Vibe Coding</span>
+    <span class="slide-num">07 / 16</span>
+  </div>
+  <h1 class="slide-title">כלי AI במקום שורות קוד</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~50 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-07.png" alt="שקף 7"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, מה זה Vibe Coding ומי יכול</h3>
+      <p>"לפני שאני מספר מה עשיתי, רגע על Vibe Coding לאלה שלא מכירים."</p>
+      <p>"<strong>Vibe Coding זה להשתמש בכלי AI</strong> כמו Lovable, Claude, Cursor או v0, <em>כדי לבנות מוצר בלי לכתוב קוד</em>. מתארים בעברית מה רוצים, ה-AI בונה."</p>
+      <p>"זה מהיר, זה נגיש, וזה מאפשר לי, מנהל ב-L&amp;D שאינו מפתח, <strong>לבנות פתרון מותאם אישית</strong>. אם זה לא עובד, מנסים שוב. בלי תקציב, בלי פרויקט פיתוח."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s08" data-num="8" data-title="אז בניתי לה דף נחיתה אישי">
+  <div class="slide-head">
+    <span class="slide-tag">המקרה</span>
+    <span class="slide-num">08 / 16</span>
+  </div>
+  <h1 class="slide-title">אז בניתי לה דף נחיתה אישי</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~35 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-08.png" alt="שקף 8"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, גשר אל הפיצ'רים</h3>
+      <p>"לאחרונה גייסתי לצוות עובדת חדשה. ביום החתימה קבענו תאריך התחלה, כשבועיים וחצי קדימה."</p>
+      <p>"רגע אחרי שיחת התזכורת בשבוע שלפני, החלטתי לעשות עוד צעד. <strong>בניתי לה דף נחיתה אישי</strong>. תוך 90 דקות. ב-Lovable. בלי קוד."</p>
+      <p>"<em>בואו נראה מה היה שם</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s09" data-num="9" data-title="מי אנחנו, הצוות שלך">
+  <div class="slide-head">
+    <span class="slide-tag">פיצ'ר 1</span>
+    <span class="slide-num">09 / 16</span>
+  </div>
+  <h1 class="slide-title">מי אנחנו, הצוות שלך</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~55 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-09.png" alt="שקף 9"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, פיצ'ר ראשון, פגישה עם הצוות מבעוד מועד</h3>
+      <p>"הפיצ'ר הראשון, <strong>הצוות</strong>. תמונה ושם של כל אחד מאיתנו, תפקיד, ותיאור אישי קצר."</p>
+      <p>"סימנתי במיוחד <strong>מי המנטור שלה ומי הבאדי</strong>. כשהיא נכנסה ביום ראשון לחדר, היא כבר ידעה מי אנחנו, <em>ולמי לחייך</em>."</p>
+      <p>"למה זה חשוב? <strong>ראיית פנים של אדם הופכת אותו ממשהו אבסטרקטי לאדם אמיתי</strong>. וזה מפחית חרדה הרבה לפני יום ראשון."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s10" data-num="10" data-title="מה תעשי כאן, בלי ז'רגון">
+  <div class="slide-head">
+    <span class="slide-tag">פיצ'ר 2</span>
+    <span class="slide-num">10 / 16</span>
+  </div>
+  <h1 class="slide-title">מה תעשי כאן, בלי ז'רגון</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~50 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-10.png" alt="שקף 10"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, פיצ'ר שני, הגדרת תפקיד אנושית</h3>
+      <p>"הפיצ'ר השני, <strong>הגדרת תפקיד ברורה</strong>, במילים אנושיות. בלי ז'רגון."</p>
+      <p>"לא 'תהיי אחראית על אקוסיסטם הלמידה'. אלא <em>'תפיקי מודולי למידה לעובדי הסניפים. ב-3 חודשים, תכירי את הצוות, תוציאי 2 מודולים, תכניסי משוב מ-3 סניפים'</em>."</p>
+      <p>"ציפיות מוגדרות, אבני דרך אמיתיות. <strong>העובד מבין מה הוא בא לעשות, לא רק איפה הוא יושב</strong>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s11" data-num="11" data-title="מה מחכה לך בימים הראשונים">
+  <div class="slide-head">
+    <span class="slide-tag">פיצ'ר 3</span>
+    <span class="slide-num">11 / 16</span>
+  </div>
+  <h1 class="slide-title">מה מחכה לך בימים הראשונים</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~55 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-11.png" alt="שקף 11"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, פיצ'ר שלישי, מפת ימים ראשונים</h3>
+      <p>"הפיצ'ר השלישי, <strong>מפת הימים הראשונים</strong>. לא לוז קשיח של דקות, כי כולם יודעים שזה דינמי. <em>אבני דרך</em>."</p>
+      <p>"<strong>יום 1</strong>, היכרות עם הצוות. <strong>שבוע 1</strong>, תצפיות בסניפים. <strong>שבוע 2</strong>, פגישה עם המנהל. <strong>חודש 1</strong>, התוצר הראשון."</p>
+      <p>"בנוסף, <strong>צ'קליסט אישי</strong> שמאפשר לעובדת לעקוב אחר ההתקדמות שלה. <em>מצמצם הפתעות, יוצר ודאות, מיישר ציפיות</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s12" data-num="12" data-title="ערוץ ישיר אליי">
+  <div class="slide-head">
+    <span class="slide-tag">פיצ'ר 4</span>
+    <span class="slide-num">12 / 16</span>
+  </div>
+  <h1 class="slide-title">ערוץ ישיר אליי</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~50 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-12.png" alt="שקף 12"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, פיצ'ר רביעי, להוריד את החסם של 'אני מטריד'</h3>
+      <p>"הפיצ'ר הרביעי, <strong>ערוץ ישיר אליי</strong>. וואטסאפ אישי, מייל, וגישה לקבוצת הצוות. אבל <em>היא בוחרת מתי להצטרף, לא אנחנו</em>."</p>
+      <p>"למה זה כל כך חשוב? <strong>לעובד החדש יש המון שאלות והוא לא רוצה להרגיש שהוא מטריד</strong>. כשהוא יודע שיש ערוץ ישיר, מותר לו לשאול."</p>
+      <p>"ופתאום השבוע הראשון הוא <em>לא בלבול, הוא דיאלוג</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s13" data-num="13" data-title="איך אני הייתי רוצה שיקבלו אותי?">
+  <div class="slide-head">
+    <span class="slide-tag">השאלה</span>
+    <span class="slide-num">13 / 16</span>
+  </div>
+  <h1 class="slide-title">איך אני הייתי רוצה שיקבלו אותי?</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~30 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-13.png" alt="שקף 13"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, רגע של הקשבה</h3>
+      <p>"השאלה ששאלתי את עצמי לאורך כל התהליך, פשוטה: <strong>'איך אני הייתי רוצה שיקבלו אותי?'</strong>"</p>
+      <p>"<em>אם אתם עונים לעצמכם על השאלה הזאת לפני שאתם מתחילים לבנות, החלק הקשה כבר נגמר</em>. כל ההחלטות נובעות ממנה."</p>
+      <p><span style='opacity:0.6'>[פאוזה של 2 שניות, להניח לשאלה לעבוד על הקהל]</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s14" data-num="14" data-title="שלוש מסקנות">
+  <div class="slide-head">
+    <span class="slide-tag">מסקנות</span>
+    <span class="slide-num">14 / 16</span>
+  </div>
+  <h1 class="slide-title">שלוש מסקנות</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~70 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-14.png" alt="שקף 14"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, סיכום הלקחים</h3>
+      <p>"שלוש מסקנות שלקחתי מהמקרה."</p>
+      <p>"ראשונה, <strong>חוויה אישית מנצחת תהליך</strong>. פתרון לעובד הספציפי, לא תבנית. כשעובדת רואה את עצמה בדף, היא מרגישה ראויה. <em>זה לא משהו שתבנית גנרית יכולה לעשות</em>."</p>
+      <p>"שנייה, <strong>לעצב חוויה ולא רק תהליך</strong>. להתחיל מהרגש, ודאות, מסוגלות, שייכות. ולא ממסמך תפעולי שמסביר נהלים."</p>
+      <p>"שלישית, <strong>AI הופך את זה לנגיש</strong>. אין צורך בתקציב פיתוח גדול. צריך <em>לדעת איזה כלי, ולשאול את השאלה הנכונה</em>."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s15" data-num="15" data-title="לא הכל ורוד">
+  <div class="slide-head">
+    <span class="slide-tag">אזהרה</span>
+    <span class="slide-num">15 / 16</span>
+  </div>
+  <h1 class="slide-title">לא הכל ורוד</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~50 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-15.png" alt="שקף 15"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, איפה Vibe Coding עובד ואיפה לא</h3>
+      <p>"חשוב להגיד, לא הכל ורוד. <strong>Vibe Coding עובד נהדר עבור כלים פשוטים, בעיקר Front-End</strong>. דף נחיתה, סקר, אפליקציה קלה."</p>
+      <p>"אבל ברגע שצריך מערכות מורכבות, אינטגרציות מול מערכות הליבה של הבנק, או דברים שדורשים אבטחת מידע, <em>צריך ידע טכני</em>."</p>
+      <p>"לכן <strong>להתחיל בקטן, להוכיח ערך, ולגייס מהנדסים כשהמורכבות מצדיקה את זה</strong>. זה לא תחליף לפיתוח, זה כלי משלים."</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s16" data-num="16" data-title="תודה">
+  <div class="slide-head">
+    <span class="slide-tag">תודה</span>
+    <span class="slide-num">16 / 16</span>
+  </div>
+  <h1 class="slide-title">תודה</h1>
+  <div class="accent-line"></div>
+  <span class="duration-pill">~25 שניות</span>
+  <div class="thumb"><img src="img/slides/preboarding-16.png" alt="שקף 16"></div>
+  <div class="slide-body">
+    <div class="section">
+      <h3>קריינות, סגירה</h3>
+      <p>"תודה רבה."</p>
+      <p>"הפוסט המלא על המקרה הזה, ועוד פוסטים על Vibe Coding ועל למידה ופיתוח, נמצא בבלוג שלי. <strong>QR פה למעלה.</strong>"</p>
+      <p>"אשמח לשאלות."</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="toc-toggle" id="toc-toggle" aria-label="פתח תוכן עניינים">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <button class="nav-btn" id="prev" aria-label="קודם">›</button>
+  <div class="nav-info">
+    <span class="now" id="now-title">פתיחה</span>
+    <span class="meta"><span id="now-num">1</span> מתוך 16</span>
+  </div>
+  <button class="nav-btn wide" id="play-all" aria-label="השמע הכל מכאן">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    הכל
+  </button>
+  <button class="nav-btn" id="next" aria-label="הבא">‹</button>
+</nav>
+
+<script>
+(function() {
+  const deck = document.getElementById('deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const fill = document.getElementById('progress-fill');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const playAllBtn = document.getElementById('play-all');
+  const nowTitle = document.getElementById('now-title');
+  const nowNum = document.getElementById('now-num');
+  const toc = document.getElementById('toc');
+  const tocBack = document.getElementById('toc-back');
+  const tocToggle = document.getElementById('toc-toggle');
+  const tocList = document.getElementById('toc-list');
+  const ttsStatus = document.getElementById('tts-status');
+
+  // ===== Build TOC =====
+  slides.forEach((s, i) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + s.id;
+    a.dataset.idx = i;
+    a.innerHTML = `<span class="num">${String(s.dataset.num).padStart(2, '0')}</span><span>${s.dataset.title || ''}</span>`;
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+  const tocLinks = tocList.querySelectorAll('a');
+
+  // ===== Active slide tracking =====
+  let active = 0;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && e.intersectionRatio > 0.5) {
+        const idx = slides.indexOf(e.target);
+        if (idx !== -1) updateActive(idx);
+      }
+    });
+  }, { threshold: [0.5, 0.75], root: deck });
+  slides.forEach(s => io.observe(s));
+
+  function updateActive(idx) {
+    active = idx;
+    const s = slides[idx];
+    nowTitle.textContent = s.dataset.title || '';
+    nowNum.textContent = s.dataset.num;
+    fill.style.width = ((parseInt(s.dataset.num, 10)) / slides.length) * 100 + '%';
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === slides.length - 1;
+    tocLinks.forEach((a, i) => a.classList.toggle('active', i === idx));
+  }
+
+  function goTo(idx) {
+    idx = Math.max(0, Math.min(slides.length - 1, idx));
+    slides[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  prevBtn.addEventListener('click', () => goTo(active - 1));
+  nextBtn.addEventListener('click', () => goTo(active + 1));
+
+  // ===== Keyboard nav (RTL: right=prev, left=next) =====
+  document.addEventListener('keydown', (e) => {
+    if (toc.classList.contains('open')) {
+      if (e.key === 'Escape') closeToc();
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(active + 1); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(active - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active - 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active + 1); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(slides.length - 1); }
+    else if (e.key === 'p' || e.key === 'P') { togglePlay(); }
+  });
+
+  // ===== TOC drawer =====
+  function openToc() { toc.classList.add('open'); tocBack.classList.add('open'); }
+  function closeToc() { toc.classList.remove('open'); tocBack.classList.remove('open'); }
+  tocToggle.addEventListener('click', openToc);
+  tocBack.addEventListener('click', closeToc);
+  tocLinks.forEach(a => a.addEventListener('click', closeToc));
+
+  // ===== Audio playback, single continuous narration =====
+  // Plays audio/narration.mp3 (concatenation of all slides). Audio is
+  // decoupled from slide navigation: navigating slides does NOT affect
+  // playback, and playback does NOT auto-advance slides.
+  const audio = new Audio('audio/narration.mp3');
+  audio.preload = 'metadata';
+  let isPlaying = false;
+
+  function fmtTime(sec) {
+    if (!isFinite(sec)) return '--:--';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function updatePlayBtn() {
+    playAllBtn.classList.toggle('playing-all', isPlaying);
+    const elapsed = fmtTime(audio.currentTime || 0);
+    const total = fmtTime(audio.duration || 0);
+    playAllBtn.innerHTML = isPlaying
+      ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> ${elapsed}`
+      : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> השמע`;
+  }
+
+  audio.addEventListener('play', () => { isPlaying = true; updatePlayBtn(); });
+  audio.addEventListener('pause', () => { isPlaying = false; updatePlayBtn(); });
+  audio.addEventListener('ended', () => { isPlaying = false; audio.currentTime = 0; updatePlayBtn(); });
+  audio.addEventListener('timeupdate', () => { if (isPlaying) updatePlayBtn(); });
+  audio.addEventListener('loadedmetadata', updatePlayBtn);
+  audio.addEventListener('error', () => {
+    ttsStatus.textContent = 'שגיאה בטעינת קובץ האודיו (audio/narration.mp3).';
+  });
+
+  function togglePlay() {
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch(err => {
+        ttsStatus.textContent = 'לא הצלחתי לנגן: ' + err.message;
+      });
+    }
+  }
+
+  playAllBtn.addEventListener('click', togglePlay);
+
+  // Pause audio when tab/window closes
+  window.addEventListener('beforeunload', () => audio.pause());
+
+  // Status indicator (HEAD request to confirm file exists)
+  fetch('audio/narration.mp3', { method: 'HEAD' }).then(r => {
+    if (r.ok) {
+      ttsStatus.textContent = 'הקריינות מוכנה. ~27 דקות. לחצי השמע.';
+    } else {
+      ttsStatus.textContent = 'קובץ הקריינות חסר. ראי scripts/generate-audio.py.';
+    }
+  }).catch(() => {});
+
+  // Initial state
+  updateActive(0);
+})();
+</script>
+
+</body>
+</html>
